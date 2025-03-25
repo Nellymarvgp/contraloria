@@ -20,7 +20,7 @@
                 </a>
                 @if(auth()->user()->isAdmin())
                 <a href="{{ route('users.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('users.*') ? 'bg-gray-700' : '' }}">
-                    <i class="fas fa-users mr-2"></i> Empleados
+                    <i class="fas fa-users mr-2"></i> Usuarios
                 </a>
                 <a href="#" class="block px-4 py-2 hover:bg-gray-700">
                     <i class="fas fa-money-bill-wave mr-2"></i> Nómina

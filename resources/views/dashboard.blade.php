@@ -5,14 +5,14 @@
 
 @section('content')
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Tarjeta de Empleados -->
+    <!-- Tarjeta de Usuarios -->
     <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center">
             <div class="p-3 rounded-full bg-blue-500 bg-opacity-10">
                 <i class="fas fa-users text-2xl text-blue-500"></i>
             </div>
             <div class="ml-4">
-                <h3 class="text-lg font-semibold text-gray-700">Empleados</h3>
+                <h3 class="text-lg font-semibold text-gray-700">Usuarios</h3>
                 <p class="text-3xl font-bold text-gray-900">{{ \App\Models\User::count() }}</p>
             </div>
         </div>
@@ -69,8 +69,8 @@
                     <i class="fas fa-user-plus text-xl text-blue-500"></i>
                 </div>
                 <div class="ml-4">
-                    <h4 class="text-lg font-medium text-gray-900">Nuevo Empleado</h4>
-                    <p class="text-gray-500">Registrar un nuevo empleado</p>
+                    <h4 class="text-lg font-medium text-gray-900">Nuevo Usuario</h4>
+                    <p class="text-gray-500">Registrar un nuevo usuario</p>
                 </div>
             </div>
         </a>

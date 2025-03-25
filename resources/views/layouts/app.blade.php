@@ -19,7 +19,7 @@
                 <div class="flex items-center space-x-4">
                     @auth
                         @if(auth()->user()->isAdmin())
-                            <a href="{{ route('users.index') }}" class="text-gray-700 hover:text-gray-900">Empleados</a>
+                            <a href="{{ route('users.index') }}" class="text-gray-700 hover:text-gray-900">Usuarios</a>
                         @endif
                         <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-gray-900">Dashboard</a>
                         <div class="relative" x-data="{ open: false }">
