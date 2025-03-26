@@ -2,15 +2,25 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\EmpleadoController;
+use App\Http\Controllers\CargoController;
+use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\HorarioController;
+use App\Http\Controllers\EstadoController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\NoticiaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('landing');
-})->name('landing');
+    $noticias = \App\Models\Noticia::where('publicado', true)
+        ->orderBy('created_at', 'desc')
+        ->take(3)
+        ->get();
+    return view('landing', compact('noticias'));
+})->name('home');
 
 // Rutas de autenticación
 Route::middleware('guest')->group(function () {
@@ -33,5 +43,15 @@ Route::middleware('auth')->group(function () {
     // Rutas de administrador
     Route::middleware(\App\Http\Middleware\AdminMiddleware::class)->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
+        
+        // Rutas de gestión de empleados
+        Route::resource('empleados', EmpleadoController::class)->except(['show']);
+        Route::resource('cargos', CargoController::class)->except(['show']);
+        Route::resource('departamentos', DepartamentoController::class)->except(['show']);
+        Route::resource('horarios', HorarioController::class)->except(['show']);
+        Route::resource('estados', EstadoController::class)->except(['show']);
+        
+        // Rutas para noticias
+        Route::resource('noticias', NoticiaController::class);
     });
 });

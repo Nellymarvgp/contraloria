@@ -8,9 +8,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-gray-100">
-    <div class="min-h-screen flex">
+    <div class="min-h-screen flex flex-col md:flex-row" x-data="{ sidebarOpen: false, adminOpen: false }">
+        <!-- Mobile menu button -->
+        <div class="md:hidden bg-gray-800 p-4">
+            <button @click="sidebarOpen = !sidebarOpen" class="text-white">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
         <!-- Sidebar -->
-        <div class="bg-gray-800 text-white w-64 py-4 flex-shrink-0">
+        <div :class="{'hidden': !sidebarOpen}" class="md:block bg-gray-800 text-white w-full md:w-64 py-4 flex-shrink-0">
             <div class="px-4">
                 <h1 class="text-2xl font-bold mb-8">SisNómina</h1>
             </div>
@@ -19,17 +26,39 @@
                     <i class="fas fa-home mr-2"></i> Dashboard
                 </a>
                 @if(auth()->user()->isAdmin())
-                <a href="{{ route('users.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('users.*') ? 'bg-gray-700' : '' }}">
-                    <i class="fas fa-users mr-2"></i> Usuarios
-                </a>
+                <!-- Administración Dropdown -->
+                <div class="relative">
+                    <button @click="adminOpen = !adminOpen" class="w-full flex items-center px-4 py-2 hover:bg-gray-700 {{ request()->routeIs(['users.*', 'empleados.*', 'cargos.*', 'departamentos.*', 'horarios.*', 'estados.*']) ? 'bg-gray-700' : '' }}">
+                        <i class="fas fa-cogs mr-2"></i>
+                        <span>Administración</span>
+                        <i class="fas fa-chevron-down ml-auto" :class="{'transform rotate-180': adminOpen}"></i>
+                    </button>
+                    <div x-show="adminOpen" class="pl-4">
+                        <a href="{{ route('users.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('users.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-users mr-2"></i> Usuarios
+                        </a>
+                        <a href="{{ route('empleados.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('empleados.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-user-tie mr-2"></i> Empleados
+                        </a>
+                        <a href="{{ route('cargos.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('cargos.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-briefcase mr-2"></i> Cargos
+                        </a>
+                        <a href="{{ route('departamentos.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('departamentos.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-building mr-2"></i> Departamentos
+                        </a>
+                        <a href="{{ route('horarios.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('horarios.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-clock mr-2"></i> Horarios
+                        </a>
+                        <a href="{{ route('estados.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('estados.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-toggle-on mr-2"></i> Estados
+                        </a>
+                    </div>
+                </div>
                 <a href="#" class="block px-4 py-2 hover:bg-gray-700">
                     <i class="fas fa-money-bill-wave mr-2"></i> Nómina
                 </a>
                 <a href="#" class="block px-4 py-2 hover:bg-gray-700">
                     <i class="fas fa-chart-bar mr-2"></i> Reportes
-                </a>
-                <a href="#" class="block px-4 py-2 hover:bg-gray-700">
-                    <i class="fas fa-cog mr-2"></i> Configuración
                 </a>
                 @endif
             </nav>
@@ -42,17 +71,17 @@
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
                         <div class="flex items-center">
-                            <h2 class="text-2xl font-bold text-gray-800">@yield('header')</h2>
+                            <h2 class="text-xl md:text-2xl font-bold text-gray-800">@yield('header')</h2>
                         </div>
                         <div class="flex items-center">
                             <div class="relative" x-data="{ open: false }">
                                 <div class="flex items-center">
                                     <button @click="open = !open" class="flex items-center text-gray-700 hover:text-gray-900 focus:outline-none">
-                                        <span class="mr-2">{{ auth()->user()->nombre }}</span>
+                                        <span class="hidden md:inline mr-2">{{ auth()->user()->nombre }}</span>
                                         <i class="fas fa-chevron-down"></i>
                                     </button>
                                 </div>
-                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                                     <a href="{{ route('users.edit', ['user' => auth()->id()]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="fas fa-user mr-2"></i> Mi Perfil
                                     </a>
@@ -70,7 +99,7 @@
             </div>
 
             <!-- Main Content -->
-            <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 @if(session('success'))
                 <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
                     {{ session('success') }}
