@@ -32,7 +32,8 @@
                     <th class="py-3 px-6 text-left">Nombre</th>
                     <th class="py-3 px-6 text-left">Cargo</th>
                     <th class="py-3 px-6 text-left">Departamento</th>
-                    <th class="py-3 px-6 text-left">Horario</th>
+                    <th class="py-3 px-6 text-left">Tipo Cargo</th>
+                    <th class="py-3 px-6 text-left">Nivel/Grupo</th>
                     <th class="py-3 px-6 text-left">Estado</th>
                     <th class="py-3 px-6 text-left">Salario</th>
                     <th class="py-3 px-6 text-center">Acciones</th>
@@ -45,7 +46,33 @@
                         <td class="py-3 px-6">{{ $empleado->user->nombre }} {{ $empleado->user->apellido }}</td>
                         <td class="py-3 px-6">{{ $empleado->cargo->nombre }}</td>
                         <td class="py-3 px-6">{{ $empleado->departamento->nombre }}</td>
-                        <td class="py-3 px-6">{{ $empleado->horario->nombre }}</td>
+                        <td class="py-3 px-6">
+                            @if($empleado->tipo_cargo)
+                                @php
+                                    $tiposCargo = [
+                                        'administrativo' => 'Administrativo',
+                                        'tecnico_superior' => 'Técnico Superior Universitario',
+                                        'profesional_universitario' => 'Profesional Universitario'
+                                    ];
+                                @endphp
+                                {{ $tiposCargo[$empleado->tipo_cargo] ?? $empleado->tipo_cargo }}
+                            @else
+                                --
+                            @endif
+                        </td>
+                        <td class="py-3 px-6">
+                            <div>
+                                @if($empleado->nivelRango)
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">{{ $empleado->nivelRango->nombre }}</span>
+                                @endif
+                                @if($empleado->grupoCargo)
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded mt-1 inline-block">{{ $empleado->grupoCargo->nombre }}</span>
+                                @endif
+                                @if(!$empleado->nivelRango && !$empleado->grupoCargo)
+                                    --
+                                @endif
+                            </div>
+                        </td>
                         <td class="py-3 px-6">
                             <span class="px-2 py-1 rounded-full text-xs" style="background-color: {{ $empleado->estado->color }}; color: {{ $empleado->estado->color === '#FFFFFF' ? '#000000' : '#FFFFFF' }}">
                                 {{ $empleado->estado->nombre }}

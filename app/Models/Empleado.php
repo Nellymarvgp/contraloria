@@ -14,7 +14,12 @@ class Empleado extends Model
         'estado_id',
         'salario',
         'fecha_ingreso',
-        'observaciones'
+        'observaciones',
+        'prima_antiguedad_id',
+        'prima_profesionalizacion_id',
+        'nivel_rango_id',
+        'grupo_cargo_id',
+        'tipo_cargo'
     ];
 
     protected $casts = [
@@ -45,5 +50,25 @@ class Empleado extends Model
     public function estado()
     {
         return $this->belongsTo(Estado::class);
+    }
+
+    public function primaAntiguedad()
+    {
+        return $this->belongsTo(PrimaAntiguedad::class);
+    }
+
+    public function primaProfesionalizacion()
+    {
+        return $this->belongsTo(PrimaProfesionalizacion::class);
+    }
+
+    public function nivelRango()
+    {
+        return $this->belongsTo(NivelRango::class);
+    }
+
+    public function grupoCargo()
+    {
+        return $this->belongsTo(GrupoCargo::class);
     }
 }

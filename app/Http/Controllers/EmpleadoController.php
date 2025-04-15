@@ -8,6 +8,10 @@ use App\Models\Cargo;
 use App\Models\Departamento;
 use App\Models\Horario;
 use App\Models\Estado;
+use App\Models\PrimaAntiguedad;
+use App\Models\PrimaProfesionalizacion;
+use App\Models\NivelRango;
+use App\Models\GrupoCargo;
 use Illuminate\Http\Request;
 
 class EmpleadoController extends Controller
@@ -25,8 +29,21 @@ class EmpleadoController extends Controller
         $departamentos = Departamento::all();
         $horarios = Horario::all();
         $estados = Estado::all();
+        $primasAntiguedad = PrimaAntiguedad::where('estado', 1)->get();
+        $primasProfesionalizacion = PrimaProfesionalizacion::where('estado', 1)->get();
+        $nivelesRangos = NivelRango::where('estado', 1)->get();
+        $gruposCargos = GrupoCargo::where('estado', 1)->get();
+        $tiposCargo = [
+            'administrativo' => 'Administrativo',
+            'tecnico_superior' => 'Técnico Superior Universitario',
+            'profesional_universitario' => 'Profesional Universitario'
+        ];
 
-        return view('empleados.create', compact('users', 'cargos', 'departamentos', 'horarios', 'estados'));
+        return view('empleados.create', compact(
+            'users', 'cargos', 'departamentos', 'horarios', 'estados',
+            'primasAntiguedad', 'primasProfesionalizacion', 'nivelesRangos',
+            'gruposCargos', 'tiposCargo'
+        ));
     }
 
     public function store(Request $request)
@@ -39,7 +56,12 @@ class EmpleadoController extends Controller
             'estado_id' => 'required|exists:estados,id',
             'salario' => 'required|numeric|min:0',
             'fecha_ingreso' => 'required|date',
-            'observaciones' => 'nullable|string'
+            'observaciones' => 'nullable|string',
+            'prima_antiguedad_id' => 'nullable|exists:prima_antiguedads,id',
+            'prima_profesionalizacion_id' => 'nullable|exists:prima_profesionalizacions,id',
+            'nivel_rango_id' => 'nullable|exists:nivel_rangos,id',
+            'grupo_cargo_id' => 'nullable|exists:grupo_cargos,id',
+            'tipo_cargo' => 'nullable|in:administrativo,tecnico_superior,profesional_universitario'
         ]);
 
         Empleado::create($request->all());
@@ -53,8 +75,21 @@ class EmpleadoController extends Controller
         $departamentos = Departamento::all();
         $horarios = Horario::all();
         $estados = Estado::all();
+        $primasAntiguedad = PrimaAntiguedad::where('estado', 1)->get();
+        $primasProfesionalizacion = PrimaProfesionalizacion::where('estado', 1)->get();
+        $nivelesRangos = NivelRango::where('estado', 1)->get();
+        $gruposCargos = GrupoCargo::where('estado', 1)->get();
+        $tiposCargo = [
+            'administrativo' => 'Administrativo',
+            'tecnico_superior' => 'Técnico Superior Universitario',
+            'profesional_universitario' => 'Profesional Universitario'
+        ];
 
-        return view('empleados.edit', compact('empleado', 'cargos', 'departamentos', 'horarios', 'estados'));
+        return view('empleados.edit', compact(
+            'empleado', 'cargos', 'departamentos', 'horarios', 'estados',
+            'primasAntiguedad', 'primasProfesionalizacion', 'nivelesRangos',
+            'gruposCargos', 'tiposCargo'
+        ));
     }
 
     public function update(Request $request, Empleado $empleado)
@@ -66,7 +101,12 @@ class EmpleadoController extends Controller
             'estado_id' => 'required|exists:estados,id',
             'salario' => 'required|numeric|min:0',
             'fecha_ingreso' => 'required|date',
-            'observaciones' => 'nullable|string'
+            'observaciones' => 'nullable|string',
+            'prima_antiguedad_id' => 'nullable|exists:prima_antiguedads,id',
+            'prima_profesionalizacion_id' => 'nullable|exists:prima_profesionalizacions,id',
+            'nivel_rango_id' => 'nullable|exists:nivel_rangos,id',
+            'grupo_cargo_id' => 'nullable|exists:grupo_cargos,id',
+            'tipo_cargo' => 'nullable|in:administrativo,tecnico_superior,profesional_universitario'
         ]);
 
         $empleado->update($request->all());

@@ -1,13 +1,14 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Crear Empleado')
-@section('header', 'Crear Nuevo Empleado')
+@section('title', 'Editar Empleado')
+@section('header', 'Editar Empleado')
 
 @section('content')
 <div class="max-w-4xl mx-auto py-6">
     <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <form action="{{ route('empleados.store') }}" method="POST" id="createEmpleadoForm" novalidate>
+        <form action="{{ route('empleados.update', $empleado) }}" method="POST" id="editEmpleadoForm" novalidate>
             @csrf
+            @method('PUT')
 
             @if ($errors->any())
                 <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
@@ -20,19 +21,12 @@
             @endif
 
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="cedula">
-                    Usuario (Cédula)
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Cédula del Empleado
                 </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('cedula') border-red-500 @enderror"
-                    id="cedula" name="cedula" required>
-                    <option value="">Seleccione un usuario</option>
-                    @foreach($users as $user)
-                        <option value="{{ $user->cedula }}" {{ old('cedula') == $user->cedula ? 'selected' : '' }}>
-                            {{ $user->cedula }} - {{ $user->nombre }} {{ $user->apellido }}
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="cedula-error"></p>
+                <div class="py-2 px-3 bg-gray-100 rounded">
+                    {{ $empleado->cedula }}
+                </div>
             </div>
 
             <div class="mb-4">
@@ -43,7 +37,7 @@
                     id="cargo_id" name="cargo_id" required>
                     <option value="">Seleccione un cargo</option>
                     @foreach($cargos as $cargo)
-                        <option value="{{ $cargo->id }}" {{ old('cargo_id') == $cargo->id ? 'selected' : '' }}>
+                        <option value="{{ $cargo->id }}" {{ old('cargo_id', $empleado->cargo_id) == $cargo->id ? 'selected' : '' }}>
                             {{ $cargo->nombre }}
                         </option>
                     @endforeach
@@ -59,7 +53,7 @@
                     id="departamento_id" name="departamento_id" required>
                     <option value="">Seleccione un departamento</option>
                     @foreach($departamentos as $departamento)
-                        <option value="{{ $departamento->id }}" {{ old('departamento_id') == $departamento->id ? 'selected' : '' }}>
+                        <option value="{{ $departamento->id }}" {{ old('departamento_id', $empleado->departamento_id) == $departamento->id ? 'selected' : '' }}>
                             {{ $departamento->nombre }}
                         </option>
                     @endforeach
@@ -75,7 +69,7 @@
                     id="horario_id" name="horario_id" required>
                     <option value="">Seleccione un horario</option>
                     @foreach($horarios as $horario)
-                        <option value="{{ $horario->id }}" {{ old('horario_id') == $horario->id ? 'selected' : '' }}>
+                        <option value="{{ $horario->id }}" {{ old('horario_id', $empleado->horario_id) == $horario->id ? 'selected' : '' }}>
                             {{ $horario->nombre }} ({{ $horario->hora_entrada }} - {{ $horario->hora_salida }})
                         </option>
                     @endforeach
@@ -91,7 +85,7 @@
                     id="estado_id" name="estado_id" required>
                     <option value="">Seleccione un estado</option>
                     @foreach($estados as $estado)
-                        <option value="{{ $estado->id }}" {{ old('estado_id') == $estado->id ? 'selected' : '' }}
+                        <option value="{{ $estado->id }}" {{ old('estado_id', $empleado->estado_id) == $estado->id ? 'selected' : '' }}
                             style="background-color: {{ $estado->color }}; color: {{ $estado->color === '#FFFFFF' ? '#000000' : '#FFFFFF' }}">
                             {{ $estado->nombre }}
                         </option>
@@ -105,7 +99,7 @@
                     Salario
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('salario') border-red-500 @enderror"
-                    id="salario" type="number" name="salario" value="{{ old('salario') }}" step="0.01" min="0" required>
+                    id="salario" type="number" name="salario" value="{{ old('salario', $empleado->salario) }}" step="0.01" min="0" required>
                 <p class="text-red-500 text-xs italic mt-1 hidden" id="salario-error"></p>
             </div>
 
@@ -114,7 +108,7 @@
                     Fecha de Ingreso
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('fecha_ingreso') border-red-500 @enderror"
-                    id="fecha_ingreso" type="date" name="fecha_ingreso" value="{{ old('fecha_ingreso', date('Y-m-d')) }}" required>
+                    id="fecha_ingreso" type="date" name="fecha_ingreso" value="{{ old('fecha_ingreso', $empleado->fecha_ingreso->format('Y-m-d')) }}" required>
                 <p class="text-red-500 text-xs italic mt-1 hidden" id="fecha-ingreso-error"></p>
             </div>
 
@@ -123,7 +117,7 @@
                     Observaciones
                 </label>
                 <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('observaciones') border-red-500 @enderror"
-                    id="observaciones" name="observaciones" rows="3">{{ old('observaciones') }}</textarea>
+                    id="observaciones" name="observaciones" rows="3">{{ old('observaciones', $empleado->observaciones) }}</textarea>
             </div>
 
             <h3 class="text-lg font-semibold text-gray-700 mb-4">Información de Remuneraciones y Clasificación</h3>
@@ -136,7 +130,7 @@
                     id="prima_antiguedad_id" name="prima_antiguedad_id">
                     <option value="">Seleccione una prima de antigüedad</option>
                     @foreach($primasAntiguedad as $prima)
-                        <option value="{{ $prima->id }}" {{ old('prima_antiguedad_id') == $prima->id ? 'selected' : '' }}>
+                        <option value="{{ $prima->id }}" {{ old('prima_antiguedad_id', $empleado->prima_antiguedad_id) == $prima->id ? 'selected' : '' }}>
                             {{ $prima->nombre }} - {{ $prima->porcentaje }}%
                         </option>
                     @endforeach
@@ -152,7 +146,7 @@
                     id="prima_profesionalizacion_id" name="prima_profesionalizacion_id">
                     <option value="">Seleccione una prima de profesionalización</option>
                     @foreach($primasProfesionalizacion as $prima)
-                        <option value="{{ $prima->id }}" {{ old('prima_profesionalizacion_id') == $prima->id ? 'selected' : '' }}>
+                        <option value="{{ $prima->id }}" {{ old('prima_profesionalizacion_id', $empleado->prima_profesionalizacion_id) == $prima->id ? 'selected' : '' }}>
                             {{ $prima->nombre }} - {{ $prima->porcentaje }}%
                         </option>
                     @endforeach
@@ -168,7 +162,7 @@
                     id="nivel_rango_id" name="nivel_rango_id">
                     <option value="">Seleccione un nivel de rango</option>
                     @foreach($nivelesRangos as $nivel)
-                        <option value="{{ $nivel->id }}" {{ old('nivel_rango_id') == $nivel->id ? 'selected' : '' }}>
+                        <option value="{{ $nivel->id }}" {{ old('nivel_rango_id', $empleado->nivel_rango_id) == $nivel->id ? 'selected' : '' }}>
                             {{ $nivel->nombre }} - {{ $nivel->descripcion }}
                         </option>
                     @endforeach
@@ -184,7 +178,7 @@
                     id="grupo_cargo_id" name="grupo_cargo_id">
                     <option value="">Seleccione un grupo de cargo</option>
                     @foreach($gruposCargos as $grupo)
-                        <option value="{{ $grupo->id }}" {{ old('grupo_cargo_id') == $grupo->id ? 'selected' : '' }}>
+                        <option value="{{ $grupo->id }}" {{ old('grupo_cargo_id', $empleado->grupo_cargo_id) == $grupo->id ? 'selected' : '' }}>
                             {{ $grupo->nombre }} - {{ $grupo->descripcion }}
                         </option>
                     @endforeach
@@ -200,7 +194,7 @@
                     id="tipo_cargo" name="tipo_cargo">
                     <option value="">Seleccione un tipo de cargo</option>
                     @foreach($tiposCargo as $value => $label)
-                        <option value="{{ $value }}" {{ old('tipo_cargo') == $value ? 'selected' : '' }}>
+                        <option value="{{ $value }}" {{ old('tipo_cargo', $empleado->tipo_cargo) == $value ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -210,7 +204,7 @@
 
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
-                    Crear Empleado
+                    Actualizar Empleado
                 </button>
                 <a href="{{ route('empleados.index') }}" class="text-gray-600 hover:text-gray-800">
                     Cancelar
@@ -222,13 +216,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('createEmpleadoForm');
+    const form = document.getElementById('editEmpleadoForm');
     const requiredFields = {
-        cedula: {
-            element: document.getElementById('cedula'),
-            error: document.getElementById('cedula-error'),
-            message: 'Debe seleccionar un usuario'
-        },
         cargo_id: {
             element: document.getElementById('cargo_id'),
             error: document.getElementById('cargo-error'),
