@@ -7,6 +7,11 @@ use App\Http\Controllers\CargoController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\EstadoController;
+use App\Http\Controllers\PrimaAntiguedadController;
+use App\Http\Controllers\PrimaProfesionalizacionController;
+use App\Http\Controllers\NivelRangoController;
+use App\Http\Controllers\GrupoCargoController;
+use App\Http\Controllers\RemuneracionController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -50,6 +55,13 @@ Route::middleware('auth')->group(function () {
         Route::resource('departamentos', DepartamentoController::class)->except(['show']);
         Route::resource('horarios', HorarioController::class)->except(['show']);
         Route::resource('estados', EstadoController::class)->except(['show']);
+        
+        // Rutas para primas y remuneraciones
+        Route::resource('prima-antiguedad', PrimaAntiguedadController::class)->except(['show']);
+        Route::resource('prima-profesionalizacion', PrimaProfesionalizacionController::class)->except(['show']);
+        Route::resource('niveles-rangos', NivelRangoController::class)->except(['show']);
+        Route::resource('grupos-cargos', GrupoCargoController::class)->except(['show']);
+        Route::resource('remuneraciones', RemuneracionController::class)->except(['show']);
         
         // Rutas para noticias
         Route::resource('noticias', NoticiaController::class);

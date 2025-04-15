@@ -28,7 +28,7 @@
                 @if(auth()->user()->isAdmin())
                 <!-- Administración Dropdown -->
                 <div class="relative">
-                    <button @click="adminOpen = !adminOpen" class="w-full flex items-center px-4 py-2 hover:bg-gray-700 {{ request()->routeIs(['users.*', 'empleados.*', 'cargos.*', 'departamentos.*', 'horarios.*', 'estados.*']) ? 'bg-gray-700' : '' }}">
+                    <button @click="adminOpen = !adminOpen" class="w-full flex items-center px-4 py-2 hover:bg-gray-700 {{ request()->routeIs(['users.*', 'cargos.*', 'departamentos.*', 'horarios.*', 'estados.*', 'prima-antiguedad.*', 'prima-profesionalizacion.*', 'niveles-rangos.*', 'grupos-cargos.*', 'remuneraciones.*']) ? 'bg-gray-700' : '' }}">
                         <i class="fas fa-cogs mr-2"></i>
                         <span>Administración</span>
                         <i class="fas fa-chevron-down ml-auto" :class="{'transform rotate-180': adminOpen}"></i>
@@ -36,9 +36,6 @@
                     <div x-show="adminOpen" class="pl-4">
                         <a href="{{ route('users.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('users.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-users mr-2"></i> Usuarios
-                        </a>
-                        <a href="{{ route('empleados.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('empleados.*') ? 'bg-gray-700' : '' }}">
-                            <i class="fas fa-user-tie mr-2"></i> Empleados
                         </a>
                         <a href="{{ route('cargos.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('cargos.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-briefcase mr-2"></i> Cargos
@@ -52,8 +49,26 @@
                         <a href="{{ route('estados.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('estados.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-toggle-on mr-2"></i> Estados
                         </a>
+                        <a href="{{ route('prima-antiguedad.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('prima-antiguedad.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-hourglass mr-2"></i> Prima de Antigüedad
+                        </a>
+                        <a href="{{ route('prima-profesionalizacion.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('prima-profesionalizacion.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-graduation-cap mr-2"></i> Prima de Profesionalización
+                        </a>
+                        <a href="{{ route('niveles-rangos.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('niveles-rangos.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-layer-group mr-2"></i> Niveles de Rangos
+                        </a>
+                        <a href="{{ route('grupos-cargos.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('grupos-cargos.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-object-group mr-2"></i> Grupos o Clases de Cargo
+                        </a>
+                        <a href="{{ route('remuneraciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('remuneraciones.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-money-bill-alt mr-2"></i> Remuneraciones
+                        </a>
                     </div>
                 </div>
+                <a href="{{ route('empleados.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('empleados.*') ? 'bg-gray-700' : '' }}">
+                    <i class="fas fa-user-tie mr-2"></i> Empleados
+                </a>
                 <a href="#" class="block px-4 py-2 hover:bg-gray-700">
                     <i class="fas fa-money-bill-wave mr-2"></i> Nómina
                 </a>
