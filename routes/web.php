@@ -12,11 +12,13 @@ use App\Http\Controllers\PrimaProfesionalizacionController;
 use App\Http\Controllers\NivelRangoController;
 use App\Http\Controllers\GrupoCargoController;
 use App\Http\Controllers\RemuneracionController;
+use App\Http\Controllers\DeduccionController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\NoticiaController;
+use App\Http\Controllers\NominaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -62,8 +64,15 @@ Route::middleware('auth')->group(function () {
         Route::resource('niveles-rangos', NivelRangoController::class)->except(['show']);
         Route::resource('grupos-cargos', GrupoCargoController::class)->except(['show']);
         Route::resource('remuneraciones', RemuneracionController::class)->except(['show']);
+        Route::resource('deducciones', DeduccionController::class)->except(['show']);
         
         // Rutas para noticias
         Route::resource('noticias', NoticiaController::class);
+        
+        // Rutas para nóminas
+        Route::resource('nominas', NominaController::class);
+        Route::get('nominas/{nomina}/generate', [NominaController::class, 'generate'])->name('nominas.generate');
+        Route::post('nominas/{nomina}/change-status', [NominaController::class, 'changeStatus'])->name('nominas.changeStatus');
+        Route::get('nominas/{nomina}/export-pdf', [NominaController::class, 'exportPdf'])->name('nominas.exportPdf');
     });
 });

@@ -64,12 +64,15 @@
                         <a href="{{ route('remuneraciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('remuneraciones.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-money-bill-alt mr-2"></i> Remuneraciones
                         </a>
+                        <a href="{{ route('deducciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('deducciones.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-minus-circle mr-2"></i> Deducciones
+                        </a>
                     </div>
                 </div>
                 <a href="{{ route('empleados.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('empleados.*') ? 'bg-gray-700' : '' }}">
                     <i class="fas fa-user-tie mr-2"></i> Empleados
                 </a>
-                <a href="#" class="block px-4 py-2 hover:bg-gray-700">
+                <a href="{{ route('nominas.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('nominas.*') ? 'bg-gray-700' : '' }}">
                     <i class="fas fa-money-bill-wave mr-2"></i> Nómina
                 </a>
                 <a href="#" class="block px-4 py-2 hover:bg-gray-700">
@@ -132,5 +135,6 @@
         </div>
     </div>
     <script src="//unpkg.com/alpinejs" defer></script>
+    @stack('scripts')
 </body>
 </html>
