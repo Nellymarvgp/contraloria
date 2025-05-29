@@ -7,6 +7,9 @@ use App\Models\Remuneracion;
 use App\Models\PrimaAntiguedad;
 use App\Models\PrimaProfesionalizacion;
 use App\Models\Deduccion;
+use App\Models\DeductionConfig;
+use App\Models\BenefitConfig;
+use App\Models\PayrollParameter;
 use Carbon\Carbon;
 
 class NominaCalculator
@@ -195,8 +198,8 @@ class NominaCalculator
      */
     protected function calcularPrimaPorHijo(Empleado $empleado)
     {
-        // For example, 6.25 per child - adjust this according to your requirements
-        $montoPorHijo = 6.25;
+        // Get the amount per child from the configuration
+        $montoPorHijo = BenefitConfig::getActiveValue('prima_por_hijo');
         $numeroHijos = $empleado->numero_hijos ?? 0;
         
         return round($montoPorHijo * $numeroHijos, 2);
@@ -209,8 +212,8 @@ class NominaCalculator
      */
     protected function calcularComida()
     {
-        // Fixed amount for food allowance - adjust as needed
-        return 24.00;
+        // Get food allowance from configuration
+        return BenefitConfig::getActiveValue('comida');
     }
     
     /**
@@ -233,8 +236,9 @@ class NominaCalculator
      */
     protected function calcularRetIVSS($sueldoBasico)
     {
-        // IVSS calculation (example: 4% of base salary)
-        return round($sueldoBasico * 0.04, 2);
+        // Get IVSS percentage from configuration
+        $porcentaje = DeductionConfig::getActivePercentage('ivss') / 100;
+        return round($sueldoBasico * $porcentaje, 2);
     }
     
     /**
@@ -245,8 +249,9 @@ class NominaCalculator
      */
     protected function calcularRetPIE($sueldoBasico)
     {
-        // PIE calculation (example: 0.5% of base salary)
-        return round($sueldoBasico * 0.005, 2);
+        // Get PIE percentage from configuration
+        $porcentaje = DeductionConfig::getActivePercentage('pie') / 100;
+        return round($sueldoBasico * $porcentaje, 2);
     }
     
     /**
@@ -257,8 +262,9 @@ class NominaCalculator
      */
     protected function calcularRetLPH($sueldoBasico)
     {
-        // LPH calculation (example: 1% of base salary)
-        return round($sueldoBasico * 0.01, 2);
+        // Get LPH percentage from configuration
+        $porcentaje = DeductionConfig::getActivePercentage('lph') / 100;
+        return round($sueldoBasico * $porcentaje, 2);
     }
     
     /**
@@ -269,8 +275,9 @@ class NominaCalculator
      */
     protected function calcularRetFPJ($sueldoBasico)
     {
-        // FPJ calculation - adjust as needed
-        return round($sueldoBasico * 0.02, 2);
+        // Get FPJ percentage from configuration
+        $porcentaje = DeductionConfig::getActivePercentage('fpj') / 100;
+        return round($sueldoBasico * $porcentaje, 2);
     }
     
     /**
@@ -281,7 +288,16 @@ class NominaCalculator
      */
     protected function calcularOrdinaria($sueldoBasico)
     {
-        // Ordinary bonus calculation (example: 150% of base salary)
+        $config = BenefitConfig::getActive('ordinaria');
+        if ($config && $config->tipo === 'porcentaje') {
+            // Apply percentage of base salary
+            return round($sueldoBasico * ($config->valor / 100), 2);
+        } else if ($config) {
+            // Apply fixed amount
+            return $config->valor;
+        }
+        
+        // Default fallback (150% of base salary)
         return round($sueldoBasico * 1.5, 2);
     }
     
@@ -293,8 +309,8 @@ class NominaCalculator
      */
     protected function calcularIncentivo(Empleado $empleado)
     {
-        // Example incentive calculation - adjust as needed
-        return 1000.00;
+        // Get incentive from configuration
+        return BenefitConfig::getActiveValue('incentivo');
     }
     
     /**
@@ -304,8 +320,8 @@ class NominaCalculator
      */
     protected function calcularFeriado()
     {
-        // Example holiday pay - adjust as needed
-        return 1210.00;
+        // Get holiday pay from configuration
+        return BenefitConfig::getActiveValue('feriado');
     }
     
     /**
@@ -316,9 +332,13 @@ class NominaCalculator
      */
     protected function calcularGastosRepresentacion(Empleado $empleado)
     {
-        // Representation expenses - adjust as needed
+        // Check if employee has a position eligible for representation expenses
         if ($empleado->cargo && $empleado->cargo->nivel === 'directivo') {
-            return 2240.00;
+            return BenefitConfig::getActiveValue('gastos_representacion_directivo');
+        } elseif ($empleado->cargo && $empleado->cargo->nivel === 'gerencial') {
+            return BenefitConfig::getActiveValue('gastos_representacion_gerencial');
+        } elseif ($empleado->cargo && $empleado->cargo->nivel === 'supervisorio') {
+            return BenefitConfig::getActiveValue('gastos_representacion_supervisorio');
         }
         
         return 0.00;
@@ -331,8 +351,8 @@ class NominaCalculator
      */
     protected function calcularTxt1()
     {
-        // Example implementation for TXT1 field - adjust as needed
-        return 600.00;
+        // Get TXT1 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_1');
     }
     
     /**
@@ -342,8 +362,8 @@ class NominaCalculator
      */
     protected function calcularTxt2()
     {
-        // Example implementation for TXT2 field - adjust as needed
-        return 590.00;
+        // Get TXT2 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_2');
     }
     
     /**
@@ -353,8 +373,8 @@ class NominaCalculator
      */
     protected function calcularTxt3()
     {
-        // Example implementation for TXT3 field - adjust as needed
-        return 580.00;
+        // Get TXT3 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_3');
     }
     
     /**
@@ -364,8 +384,8 @@ class NominaCalculator
      */
     protected function calcularTxt4()
     {
-        // Example implementation for TXT4 field - adjust as needed
-        return 599.00;
+        // Get TXT4 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_4');
     }
     
     /**
@@ -375,8 +395,8 @@ class NominaCalculator
      */
     protected function calcularTxt5()
     {
-        // Example implementation for TXT5 field - adjust as needed
-        return 595.00;
+        // Get TXT5 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_5');
     }
     
     /**
@@ -386,8 +406,8 @@ class NominaCalculator
      */
     protected function calcularTxt6()
     {
-        // Example implementation for TXT6 field - adjust as needed
-        return 585.00;
+        // Get TXT6 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_6');
     }
     
     /**
@@ -397,8 +417,8 @@ class NominaCalculator
      */
     protected function calcularTxt7()
     {
-        // Example implementation for TXT7 field - adjust as needed
-        return 0.00;
+        // Get TXT7 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_7');
     }
     
     /**
@@ -408,8 +428,8 @@ class NominaCalculator
      */
     protected function calcularTxt8()
     {
-        // Example implementation for TXT8 field - adjust as needed
-        return 0.00;
+        // Get TXT8 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_8');
     }
     
     /**
@@ -419,8 +439,8 @@ class NominaCalculator
      */
     protected function calcularTxt9()
     {
-        // Example implementation for TXT9 field - adjust as needed
-        return 0.00;
+        // Get TXT9 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_9');
     }
     
     /**
@@ -430,8 +450,8 @@ class NominaCalculator
      */
     protected function calcularTxt10()
     {
-        // Example implementation for TXT10 field - adjust as needed
-        return 0.00;
+        // Get TXT10 value from PayrollParameter configuration
+        return PayrollParameter::getValueByField('txt_10');
     }
     
     /**

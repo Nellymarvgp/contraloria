@@ -13,6 +13,9 @@ use App\Http\Controllers\NivelRangoController;
 use App\Http\Controllers\GrupoCargoController;
 use App\Http\Controllers\RemuneracionController;
 use App\Http\Controllers\DeduccionController;
+use App\Http\Controllers\DeductionConfigController;
+use App\Http\Controllers\BenefitConfigController;
+use App\Http\Controllers\PayrollParameterController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -74,5 +77,10 @@ Route::middleware('auth')->group(function () {
         Route::get('nominas/{nomina}/generate', [NominaController::class, 'generate'])->name('nominas.generate');
         Route::post('nominas/{nomina}/change-status', [NominaController::class, 'changeStatus'])->name('nominas.changeStatus');
         Route::get('nominas/{nomina}/export-pdf', [NominaController::class, 'exportPdf'])->name('nominas.exportPdf');
+        
+        // Rutas para configuración de nóminas
+        Route::resource('deduction-configs', DeductionConfigController::class);
+        Route::resource('benefit-configs', BenefitConfigController::class);
+        Route::resource('payroll-parameters', PayrollParameterController::class);
     });
 });
