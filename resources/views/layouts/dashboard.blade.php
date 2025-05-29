@@ -64,37 +64,36 @@
                         <a href="{{ route('remuneraciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('remuneraciones.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-money-bill-alt mr-2"></i> Remuneraciones
                         </a>
-                        <a href="{{ route('deducciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('deducciones.*') ? 'bg-gray-700' : '' }}">
-                            <i class="fas fa-minus-circle mr-2"></i> Deducciones
-                        </a>
+                        
                     </div>
                 </div>
                 <a href="{{ route('empleados.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('empleados.*') ? 'bg-gray-700' : '' }}">
                     <i class="fas fa-user-tie mr-2"></i> Empleados
                 </a>
-                <a href="{{ route('nominas.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('nominas.*') ? 'bg-gray-700' : '' }}">
-                    <i class="fas fa-money-bill-wave mr-2"></i> Nómina
-                </a>
-                
-                <!-- Configuración de Nómina Dropdown -->
-                <div class="relative" x-data="{ configOpen: false }">
-                    <button @click="configOpen = !configOpen" class="w-full flex items-center px-4 py-2 hover:bg-gray-700 {{ request()->routeIs(['deduction-configs.*', 'benefit-configs.*', 'payroll-parameters.*']) ? 'bg-gray-700' : '' }}">
+                 <!-- Configuración de Nómina Dropdown -->
+                 <div class="relative" x-data="{ configOpen: false }">
+                    <button @click="configOpen = !configOpen" class="w-full flex items-center px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('deducciones.*') ? 'bg-gray-700' : '' }}">
                         <i class="fas fa-cog mr-2"></i>
                         <span>Configuración de Nómina</span>
                         <i class="fas fa-chevron-down ml-auto" :class="{'transform rotate-180': configOpen}"></i>
                     </button>
                     <div x-show="configOpen" class="pl-4">
-                        <a href="{{ route('deduction-configs.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('deduction-configs.*') ? 'bg-gray-700' : '' }}">
+                        <a href="{{ route('deducciones.index', ['tipo' => 'deduccion']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'deduccion') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-minus-circle mr-2"></i> Deducciones
                         </a>
-                        <a href="{{ route('benefit-configs.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('benefit-configs.*') ? 'bg-gray-700' : '' }}">
+                        <a href="{{ route('deducciones.index', ['tipo' => 'beneficio']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'beneficio') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-plus-circle mr-2"></i> Beneficios
                         </a>
-                        <a href="{{ route('payroll-parameters.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('payroll-parameters.*') ? 'bg-gray-700' : '' }}">
+                        <a href="{{ route('deducciones.index', ['tipo' => 'parametro']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'parametro') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-sliders-h mr-2"></i> Parámetros
                         </a>
                     </div>
                 </div>
+                <a href="{{ route('nominas.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('nominas.*') ? 'bg-gray-700' : '' }}">
+                    <i class="fas fa-money-bill-wave mr-2"></i> Nómina
+                </a>
+                
+               
                 <a href="#" class="block px-4 py-2 hover:bg-gray-700">
                     <i class="fas fa-chart-bar mr-2"></i> Reportes
                 </a>
