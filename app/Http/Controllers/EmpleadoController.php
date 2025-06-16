@@ -13,9 +13,17 @@ use App\Models\PrimaProfesionalizacion;
 use App\Models\NivelRango;
 use App\Models\GrupoCargo;
 use Illuminate\Http\Request;
+use App\Imports\EmpleadosImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class EmpleadoController extends Controller
 {
+    public function show(Empleado $empleado)
+    {
+        // Cargar relaciones necesarias
+        $empleado->load(['user', 'cargo', 'departamento', 'horario', 'estado', 'beneficios', 'deducciones']);
+        return view('empleados.show', compact('empleado'));
+    }
     public function index()
     {
         $empleados = Empleado::with(['user', 'cargo', 'departamento', 'horario', 'estado'])->paginate(10);
@@ -39,10 +47,12 @@ class EmpleadoController extends Controller
             'profesional_universitario' => 'Profesional Universitario'
         ];
 
+        $deducciones = \App\Models\Deduccion::whereIn('tipo', ['beneficio', 'parametro'])->where('activo', 1)->get();
+
         return view('empleados.create', compact(
             'users', 'cargos', 'departamentos', 'horarios', 'estados',
             'primasAntiguedad', 'primasProfesionalizacion', 'nivelesRangos',
-            'gruposCargos', 'tiposCargo'
+            'gruposCargos', 'tiposCargo', 'deducciones'
         ));
     }
 
@@ -61,10 +71,30 @@ class EmpleadoController extends Controller
             'prima_profesionalizacion_id' => 'nullable|exists:prima_profesionalizacions,id',
             'nivel_rango_id' => 'nullable|exists:nivel_rangos,id',
             'grupo_cargo_id' => 'nullable|exists:grupo_cargos,id',
-            'tipo_cargo' => 'nullable|in:administrativo,tecnico_superior,profesional_universitario'
+            'tipo_cargo' => 'nullable|in:administrativo,tecnico_superior,profesional_universitario',
+            'tiene_hijos' => 'nullable|boolean',
+            'cantidad_hijos' => 'nullable|integer|min:1|required_if:tiene_hijos,1',
+            'beneficios' => 'nullable|array',
+            'beneficios.*' => 'exists:deducciones,id',
+            'deducciones' => 'nullable|array',
+            'deducciones.*' => 'exists:deducciones,id',
         ]);
 
-        Empleado::create($request->all());
+        $data = $request->all();
+        $data['tiene_hijos'] = $request->has('tiene_hijos') ? 1 : 0;
+        if(!$data['tiene_hijos']) {
+            $data['cantidad_hijos'] = null;
+        }
+        $empleado = Empleado::create($data);
+
+        // Asociar beneficios
+        if ($request->filled('beneficios')) {
+            $empleado->beneficios()->sync($request->input('beneficios'));
+        }
+        // Asociar deducciones
+        if ($request->filled('deducciones')) {
+            $empleado->deducciones()->sync($request->input('deducciones'));
+        }
 
         return redirect()->route('empleados.index')->with('success', 'Empleado registrado exitosamente.');
     }
@@ -85,10 +115,13 @@ class EmpleadoController extends Controller
             'profesional_universitario' => 'Profesional Universitario'
         ];
 
+        $beneficios = \App\Models\Deduccion::where('tipo', 'beneficio')->where('activo', 1)->get();
+        $deducciones = \App\Models\Deduccion::where('tipo', 'deduccion')->where('activo', 1)->get();
+
         return view('empleados.edit', compact(
             'empleado', 'cargos', 'departamentos', 'horarios', 'estados',
             'primasAntiguedad', 'primasProfesionalizacion', 'nivelesRangos',
-            'gruposCargos', 'tiposCargo'
+            'gruposCargos', 'tiposCargo', 'beneficios', 'deducciones'
         ));
     }
 
@@ -106,10 +139,34 @@ class EmpleadoController extends Controller
             'prima_profesionalizacion_id' => 'nullable|exists:prima_profesionalizacions,id',
             'nivel_rango_id' => 'nullable|exists:nivel_rangos,id',
             'grupo_cargo_id' => 'nullable|exists:grupo_cargos,id',
-            'tipo_cargo' => 'nullable|in:administrativo,tecnico_superior,profesional_universitario'
+            'tipo_cargo' => 'nullable|in:administrativo,tecnico_superior,profesional_universitario',
+            'tiene_hijos' => 'nullable|boolean',
+            'cantidad_hijos' => 'nullable|integer|min:1|required_if:tiene_hijos,1',
+            'beneficios' => 'nullable|array',
+            'beneficios.*' => 'exists:deducciones,id',
+            'deducciones' => 'nullable|array',
+            'deducciones.*' => 'exists:deducciones,id',
         ]);
 
-        $empleado->update($request->all());
+        $data = $request->all();
+        $data['tiene_hijos'] = $request->has('tiene_hijos') ? 1 : 0;
+        if(!$data['tiene_hijos']) {
+            $data['cantidad_hijos'] = null;
+        }
+        $empleado->update($data);
+
+        // Asociar beneficios
+        if ($request->filled('beneficios')) {
+            $empleado->beneficios()->sync($request->input('beneficios'));
+        } else {
+            $empleado->beneficios()->detach();
+        }
+        // Asociar deducciones
+        if ($request->filled('deducciones')) {
+            $empleado->deducciones()->sync($request->input('deducciones'));
+        } else {
+            $empleado->deducciones()->detach();
+        }
 
         return redirect()->route('empleados.index')->with('success', 'Empleado actualizado exitosamente.');
     }
@@ -118,5 +175,29 @@ class EmpleadoController extends Controller
     {
         $empleado->delete();
         return redirect()->route('empleados.index')->with('success', 'Empleado eliminado exitosamente.');
+    }
+
+    /**
+     * Show the form for importing empleados.
+     */
+    public function importForm()
+    {
+        return view('empleados.import');
+    }
+
+    /**
+     * Import empleados from Excel/CSV.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,xlsx,xls|max:2048',
+        ]);
+        try {
+            Excel::import(new EmpleadosImport, $request->file('file'));
+            return redirect()->route('empleados.index')->with('success', 'Empleados importados correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al importar: ' . $e->getMessage());
+        }
     }
 }

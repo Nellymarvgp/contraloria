@@ -36,6 +36,9 @@
                     <th class="py-3 px-6 text-left">Nivel/Grupo</th>
                     <th class="py-3 px-6 text-left">Estado</th>
                     <th class="py-3 px-6 text-left">Salario</th>
+                    <th class="py-3 px-6 text-left">Hijos</th>
+                    <th class="py-3 px-6 text-left">Beneficios</th>
+                    <th class="py-3 px-6 text-left">Deducciones</th>
                     <th class="py-3 px-6 text-center">Acciones</th>
                 </tr>
             </thead>
@@ -79,8 +82,40 @@
                             </span>
                         </td>
                         <td class="py-3 px-6">{{ number_format($empleado->salario, 2) }}</td>
+                        <td class="py-3 px-6">
+                            @if($empleado->tiene_hijos)
+                                <span class="font-semibold">Sí</span> ({{ $empleado->cantidad_hijos }})
+                            @else
+                                No
+                            @endif
+                        </td>
+                        <td class="py-3 px-6">
+                            @if($empleado->beneficios && $empleado->beneficios->count())
+                                <ul class="list-disc pl-4">
+                                    @foreach($empleado->beneficios as $b)
+                                        <li>{{ $b->nombre }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                --
+                            @endif
+                        </td>
+                        <td class="py-3 px-6">
+                            @if($empleado->deducciones && $empleado->deducciones->count())
+                                <ul class="list-disc pl-4">
+                                    @foreach($empleado->deducciones as $d)
+                                        <li>{{ $d->nombre }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                --
+                            @endif
+                        </td>
                         <td class="py-3 px-6 text-center">
-                            <div class="flex item-center justify-center">
+                            <div class="flex item-center justify-center;">
+                                <a href="{{ route('empleados.show', $empleado) }}" class="text-green-600 hover:text-green-800 mx-2" title="Ver Detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="{{ route('empleados.edit', $empleado) }}" class="text-blue-500 hover:text-blue-700 mx-2">
                                     <i class="fas fa-edit"></i>
                                 </a>

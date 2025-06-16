@@ -21,6 +21,7 @@
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Nivel de Rango</th>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Grupo o Clase</th>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Tipo de Cargo</th>
+                    <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Tipo de Personal</th>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Valor</th>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Estado</th>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Acciones</th>
@@ -30,8 +31,8 @@
                 @forelse($remuneraciones as $remuneracion)
                 <tr class="hover:bg-gray-50">
                     <td class="py-2 px-6 text-sm">{{ $remuneracion->id }}</td>
-                    <td class="py-2 px-6 text-sm">{{ $remuneracion->nivelRango->descripcion }}</td>
-                    <td class="py-2 px-6 text-sm">{{ $remuneracion->grupoCargo->descripcion }}</td>
+                    <td class="py-2 px-6 text-sm">{{ $remuneracion->nivelRango?->descripcion ?? '-' }}</td>
+                    <td class="py-2 px-6 text-sm">{{ $remuneracion->grupoCargo?->descripcion ?? '-' }}</td>
                     <td class="py-2 px-6 text-sm">
                         @if($remuneracion->tipo_cargo == 'administrativo')
                             Administrativo
@@ -39,6 +40,13 @@
                             Técnico Superior Universitario
                         @elseif($remuneracion->tipo_cargo == 'profesional_universitario')
                             Profesional Universitario
+                        @endif
+                    </td>
+                    <td class="py-2 px-6 text-sm">
+                        @if($remuneracion->tipo_personal == 'obreros')
+                            Obreros
+                        @elseif($remuneracion->tipo_personal == 'administracion_publica')
+                            Administración Pública
                         @endif
                     </td>
                     <td class="py-2 px-6 text-sm">{{ number_format($remuneracion->valor, 2) }}</td>
@@ -62,7 +70,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="py-6 px-6 text-center text-gray-500">No hay remuneraciones registradas</td>
+                    <td colspan="8" class="py-6 px-6 text-center text-gray-500">No hay remuneraciones registradas</td>
                 </tr>
                 @endforelse
             </tbody>

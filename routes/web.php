@@ -56,6 +56,8 @@ Route::middleware('auth')->group(function () {
         
         // Rutas de gestión de empleados
         Route::resource('empleados', EmpleadoController::class)->except(['show']);
+        Route::get('empleados-import', [EmpleadoController::class, 'importForm'])->name('empleados.import.form');
+        Route::post('empleados-import', [EmpleadoController::class, 'import'])->name('empleados.import');
         Route::resource('cargos', CargoController::class)->except(['show']);
         Route::resource('departamentos', DepartamentoController::class)->except(['show']);
         Route::resource('horarios', HorarioController::class)->except(['show']);
@@ -67,6 +69,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('niveles-rangos', NivelRangoController::class)->except(['show']);
         Route::resource('grupos-cargos', GrupoCargoController::class)->except(['show']);
         Route::resource('remuneraciones', RemuneracionController::class)->except(['show']);
+        Route::get('remuneraciones-import', [RemuneracionController::class, 'importForm'])->name('remuneraciones.import.form');
+        Route::post('remuneraciones-import', [RemuneracionController::class, 'import'])->name('remuneraciones.import');
+        Route::get('remuneraciones-template', [RemuneracionController::class, 'downloadTemplate'])->name('remuneraciones.template');
         Route::resource('deducciones', DeduccionController::class)->except(['show']);
         
         // Rutas para noticias

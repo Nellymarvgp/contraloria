@@ -19,6 +19,7 @@
                 <tr>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">ID</th>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Descripción</th>
+                    <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Categoría</th>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Estado</th>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">Acciones</th>
                 </tr>
@@ -28,6 +29,16 @@
                 <tr class="hover:bg-gray-50">
                     <td class="py-2 px-6 text-sm">{{ $grupo->id }}</td>
                     <td class="py-2 px-6 text-sm">{{ $grupo->descripcion }}</td>
+                    <td class="py-2 px-6 text-sm">
+                        @php
+                            $catLabels = [
+                                'administrativo_bachiller' => 'Personal administrativo o bachilleres',
+                                'tecnico_superior' => 'Personal técnico superior universitario',
+                                'profesional_universitario' => 'Personal profesional universitario',
+                            ];
+                        @endphp
+                        {{ $catLabels[$grupo->categoria] ?? '-' }}
+                    </td>
                     <td class="py-2 px-6 text-sm">
                         <span class="px-2 py-1 text-xs rounded {{ $grupo->estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                             {{ $grupo->estado ? 'Activo' : 'Inactivo' }}
@@ -48,7 +59,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="py-6 px-6 text-center text-gray-500">No hay grupos registrados</td>
+                    <td colspan="5" class="py-6 px-6 text-center text-gray-500">No hay grupos registrados</td>
                 </tr>
                 @endforelse
             </tbody>
