@@ -30,7 +30,7 @@ class EmpleadoController extends Controller
         return view('empleados.index', compact('empleados'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $users = User::whereNotIn('cedula', Empleado::pluck('cedula'))->get();
         $cargos = Cargo::all();
@@ -40,19 +40,28 @@ class EmpleadoController extends Controller
         $primasAntiguedad = PrimaAntiguedad::where('estado', 1)->get();
         $primasProfesionalizacion = PrimaProfesionalizacion::where('estado', 1)->get();
         $nivelesRangos = NivelRango::where('estado', 1)->get();
-        $gruposCargos = GrupoCargo::where('estado', 1)->get();
+
         $tiposCargo = [
             'administrativo' => 'Administrativo',
             'tecnico_superior' => 'Técnico Superior Universitario',
             'profesional_universitario' => 'Profesional Universitario'
         ];
 
+        $tipoCargoSeleccionado = $request->get('tipo_cargo');
+        if ($tipoCargoSeleccionado) {
+            $gruposCargos = GrupoCargo::where('estado', 1)
+                ->where('categoria', $tipoCargoSeleccionado)
+                ->get();
+        } else {
+            $gruposCargos = collect(); // Vacío hasta que seleccione tipo_cargo
+        }
+
         $deducciones = \App\Models\Deduccion::whereIn('tipo', ['beneficio', 'parametro'])->where('activo', 1)->get();
 
         return view('empleados.create', compact(
             'users', 'cargos', 'departamentos', 'horarios', 'estados',
             'primasAntiguedad', 'primasProfesionalizacion', 'nivelesRangos',
-            'gruposCargos', 'tiposCargo', 'deducciones'
+            'gruposCargos', 'tiposCargo', 'deducciones', 'tipoCargoSeleccionado'
         ));
     }
 

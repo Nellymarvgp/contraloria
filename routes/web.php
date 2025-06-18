@@ -55,7 +55,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         
         // Rutas de gestión de empleados
-        Route::resource('empleados', EmpleadoController::class)->except(['show']);
+        Route::resource('empleados', EmpleadoController::class);
         Route::get('empleados-import', [EmpleadoController::class, 'importForm'])->name('empleados.import.form');
         Route::post('empleados-import', [EmpleadoController::class, 'import'])->name('empleados.import');
         Route::resource('cargos', CargoController::class)->except(['show']);
@@ -87,5 +87,14 @@ Route::middleware('auth')->group(function () {
         Route::resource('deduction-configs', DeductionConfigController::class);
         Route::resource('benefit-configs', BenefitConfigController::class);
         Route::resource('payroll-parameters', PayrollParameterController::class);
+        
+        // Ruta de prueba para solucionar el problema de los grupos de cargo
+        Route::get('test-grupos', function() {
+            return view('empleados.temp-test');
+        });
+        
+        // Rutas AJAX para empleados
+        Route::get('grupos-por-tipo/{tipo}', [GrupoCargoController::class, 'getGruposPorTipo'])->name('grupos.por.tipo');
+        Route::get('remuneracion-por-grupo/{grupoId}', [RemuneracionController::class, 'getRemuneracionPorGrupo'])->name('remuneracion.por.grupo');
     });
 });

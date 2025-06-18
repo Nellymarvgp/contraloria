@@ -195,16 +195,20 @@
                     <option value="tecnico_superior">Técnico Superior Universitario</option>
                     <option value="profesional_universitario">Profesional Universitario</option>
                 </select>
+                <p class="text-red-500 text-xs italic mt-1 hidden" id="tipo_cargo-error"></p>
             </div>
             
             <div class="mb-4" id="grupo_cargo_div" style="display:none;">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="grupo_cargo_id">Grupo de Cargo</label>
-                <select id="grupo_cargo_id" name="grupo_cargo_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
-                    <option value="">Seleccione grupo</option>
-                    @foreach($gruposCargos as $grupo)
-                        <option value="{{ $grupo->id }}" {{ old('grupo_cargo_id') == $grupo->id ? 'selected' : '' }}>{{ $grupo->descripcion }}</option>
-                    @endforeach
-                </select>
+                <select id="grupo_cargo_id" name="grupo_cargo_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" {{ empty($gruposCargos) ? 'disabled' : '' }}>
+    <option value="">Seleccione un grupo de cargo</option>
+    @foreach($gruposCargos as $grupo)
+        <option value="{{ $grupo->id }}" {{ old('grupo_cargo_id') == $grupo->id ? 'selected' : '' }}>{{ $grupo->descripcion }}</option>
+    @endforeach
+</select>
+@if(empty($gruposCargos) || $gruposCargos->count() == 0)
+    <p class="text-sm text-gray-500 mt-1">Seleccione primero un tipo de cargo para ver los grupos disponibles.</p>
+@endif
             </div>
             <div class="mb-4" id="clasificacion_div" style="display:none;">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="clasificacion">Clasificación</label>
@@ -268,7 +272,7 @@
             <!-- NUEVOS SELECTS DINÁMICOS PARA REMUNERACIÓN -->
 
 <!-- SCRIPT DINÁMICO PARA OBTENER SUELDO -->
-<script>
+<script> 
 function mostrarOcultarCampos() {
     const tipo = document.getElementById('tipo_personal').value;
     document.getElementById('nivel_rango_div').style.display = tipo === 'administracion_publica' ? '' : 'none';
@@ -277,196 +281,111 @@ function mostrarOcultarCampos() {
     document.getElementById('clasificacion_div').style.display = tipo === 'obreros' ? '' : 'none';
     document.getElementById('grado_div').style.display = tipo === 'obreros' ? '' : 'none';
     
-    if(tipo === 'administracion_publica') {
-        filtrarGrupoCargo(); // Filtrar grupos de cargo basado en el tipo de cargo
+    // Limpiar el select de grupo_cargo y el campo salario al cambiar el tipo
+    if (tipo === 'administracion_publica') {
+        document.getElementById('grupo_cargo_id').innerHTML = '<option value="">Seleccione un grupo</option>';
+        document.getElementById('salario').value = '';
     }
 }
 
-function filtrarGrupoCargo() {
+// Filtrar grupos de cargo según el tipo seleccionado
+function filtrarGruposPorTipo() {
     const tipoCargo = document.getElementById('tipo_cargo').value;
     const grupoCargoSelect = document.getElementById('grupo_cargo_id');
     
-    // Guardar el valor seleccionado actual si existe
-    const valorSeleccionado = grupoCargoSelect.value;
+    // Limpiar el select de grupo de cargo y el campo salario
+    grupoCargoSelect.innerHTML = '<option value="">Seleccione un grupo</option>';
+    document.getElementById('salario').value = '';
     
-    // Mostrar todas las opciones primero
-    Array.from(grupoCargoSelect.options).forEach(option => {
-        if(option.value !== '') {
-            option.style.display = '';
-        }
-    });
+    // Si no hay tipo de cargo seleccionado, terminamos
+    if (!tipoCargo) {
+        grupoCargoSelect.disabled = true;
+        return;
+    }
     
-    // Si no hay tipo de cargo seleccionado, dejamos todas las opciones visibles
-    if(!tipoCargo) return;
+    grupoCargoSelect.disabled = true; // Deshabilitar mientras carga
     
-    // Realizar una solicitud AJAX para obtener los grupos de cargo según el tipo seleccionado
-    fetch(`/api/grupos-cargo/por-tipo/${tipoCargo}`)
+    // Realizar una solicitud AJAX para obtener los grupos según el tipo
+    fetch(`/grupos-por-tipo/${tipoCargo}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Error al obtener grupos de cargo');
+                throw new Error('Error al obtener grupos: ' + response.status);
             }
             return response.json();
         })
-        .then(gruposPermitidos => {
-            // Si la API devuelve datos, filtrar según los IDs recibidos
-            if (gruposPermitidos && gruposPermitidos.length) {
-                filtrarOpciones(gruposPermitidos);
-            } else {
-                // Si no hay datos de la API, usamos la lógica predeterminada
-                const mapaGrupos = {
-                    'bachiller': ['1', '2'],
-                    'tecnico_superior': ['2', '3'],
-                    'profesional_universitario': ['3', '4', '5']
-                };
-                
-                const gruposPermitidosPorTipo = mapaGrupos[tipoCargo] || [];
-                filtrarOpciones(gruposPermitidosPorTipo);
+        .then(grupos => {
+            // Habilitar el select
+            grupoCargoSelect.disabled = false;
+            
+            // Si no hay grupos, terminamos
+            if (grupos.length === 0) {
+                return;
+            }
+            
+            // Agregar las opciones al select
+            grupos.forEach(grupo => {
+                const option = document.createElement('option');
+                option.value = grupo.id;
+                option.textContent = grupo.descripcion;
+                grupoCargoSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            grupoCargoSelect.disabled = false;
+        });
+}
+
+// Obtener el salario según el grupo de cargo seleccionado
+function obtenerSalarioPorGrupo() {
+    const grupoId = document.getElementById('grupo_cargo_id').value;
+    const salarioInput = document.getElementById('salario');
+    
+    // Limpiar el campo salario
+    salarioInput.value = '';
+    
+    // Si no hay grupo seleccionado, terminamos
+    if (!grupoId) {
+        return;
+    }
+    
+    // Realizar una solicitud AJAX para obtener el salario
+    fetch(`/remuneracion-por-grupo/${grupoId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener salario: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.valor) {
+                salarioInput.value = data.valor;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            // En caso de error, mostramos todas las opciones
-            Array.from(grupoCargoSelect.options).forEach(option => {
-                if(option.value !== '') {
-                    option.style.display = '';
-                }
-            });
         });
-    
-    function filtrarOpciones(gruposPermitidos) {
-        // Ocultar todas las opciones primero excepto la opción vacía
-        Array.from(grupoCargoSelect.options).forEach(option => {
-            if(option.value !== '') {
-                option.style.display = 'none';
-            }
-        });
-        
-        // Mostrar solo las opciones permitidas
-        Array.from(grupoCargoSelect.options).forEach(option => {
-            if(gruposPermitidos.includes(option.value)) {
-                option.style.display = '';
-            }
-        });
-        
-        // Resetear la selección si el valor anterior ya no está disponible
-        if(valorSeleccionado) {
-            const opcionAun = Array.from(grupoCargoSelect.options).find(o => 
-                o.value === valorSeleccionado && o.style.display !== 'none');
-            if(!opcionAun) {
-                grupoCargoSelect.value = '';
-            }
-        }
-        
-        // Si solo hay una opción disponible (además de la opción vacía), seleccionarla automáticamente
-        const opcionesVisibles = Array.from(grupoCargoSelect.options).filter(o => 
-            o.value !== '' && o.style.display !== 'none');
-        if(opcionesVisibles.length === 1 && grupoCargoSelect.value === '') {
-            grupoCargoSelect.value = opcionesVisibles[0].value;
-        }
-    }
+}
 
-}
-function obtenerSueldo() {
-    console.log('Calculando salario...');
-    const tipo = document.getElementById('tipo_personal').value;
-    let params = { tipo_personal: tipo };
-    if(tipo === 'administracion_publica') {
-        params.nivel_rango_id = document.getElementById('nivel_rango_id').value;
-        params.grupo_cargo_id = document.getElementById('grupo_cargo_id').value;
-        params.tipo_cargo = document.getElementById('tipo_cargo').value;
-    } else if(tipo === 'obreros') {
-        params.clasificacion = document.getElementById('clasificacion').value;
-        params.grado = document.getElementById('grado').value;
-    }
-    
-    console.log('Parámetros para cálculo de salario:', params);
-    
-    // Solo hace la petición si los selects requeridos están llenos
-    let valid = tipo && (
-        (tipo === 'administracion_publica' && params.nivel_rango_id && params.grupo_cargo_id && params.tipo_cargo) || 
-        (tipo === 'obreros' && params.clasificacion && params.grado)
-    );
-    
-    if(!valid) { 
-        console.log('Faltan campos obligatorios para calcular el salario');
-        document.getElementById('salario').value = ''; 
-        return; 
-    }
-    
-    console.log('Consultando API para obtener salario...');
-    fetch('/api/remuneracion/obtener?' + new URLSearchParams(params))
-        .then(res => {
-            if (!res.ok) {
-                throw new Error('Error en la respuesta de la API: ' + res.status);
-            }
-            return res.json();
-        })
-        .then(data => {
-            console.log('Respuesta de API:', data);
-            if(data && data.valor !== undefined) {
-                document.getElementById('salario').value = data.valor;
-                console.log('Salario actualizado:', data.valor);
-            } else {
-                document.getElementById('salario').value = '';
-                console.log('No se recibieron datos de salario válidos');
-            }
-        })
-        .catch(error => { 
-            console.error('Error al obtener salario:', error); 
-            document.getElementById('salario').value = ''; 
-        });
-}
+// Configurar los event listeners cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar/ocultar campos según el tipo de personal inicial
     mostrarOcultarCampos();
     
-    // Cuando cambia el tipo de personal
-    document.getElementById('tipo_personal').addEventListener('change', function() {
-        mostrarOcultarCampos();
-        // El cálculo de salario se retrasa para dar tiempo a que se muestren/oculten campos
-        setTimeout(obtenerSueldo, 100);
-    });
+    // Event listener para tipo_personal
+    document.getElementById('tipo_personal').addEventListener('change', mostrarOcultarCampos);
     
-    // Filtrar grupo de cargo según tipo de cargo
-    document.getElementById('tipo_cargo').addEventListener('change', function() {
-        filtrarGrupoCargo();
-        // El cálculo de salario se retrasa para dar tiempo al filtrado de grupos
-        setTimeout(obtenerSueldo, 300);
-    });
+    // Event listener para tipo_cargo
+    document.getElementById('tipo_cargo').addEventListener('change', filtrarGruposPorTipo);
     
-    // Agregar listeners específicos con mayor prioridad
-    const grupoCargo = document.getElementById('grupo_cargo_id');
-    if(grupoCargo) {
-        grupoCargo.addEventListener('change', function() {
-            console.log('Grupo de cargo cambiado a:', this.value);
-            obtenerSueldo();
-        });
-    }
+    // Event listener para grupo_cargo_id
+    document.getElementById('grupo_cargo_id').addEventListener('change', obtenerSalarioPorGrupo);
     
-    // Para todos los demás campos relevantes
-    ['nivel_rango_id','clasificacion','grado'].forEach(id => {
-        let el = document.getElementById(id);
-        if(el) {
-            el.addEventListener('change', function() {
-                console.log(`Campo ${id} cambiado a:`, this.value);
-                obtenerSueldo();
-            });
-        }
-    });
-    
-    // Prima de antigüedad afecta al salario
-    const primaAntiguedad = document.getElementById('prima_antiguedad_id');
-    if(primaAntiguedad) {
-        primaAntiguedad.addEventListener('change', function() {
-            console.log('Prima de antigüedad cambiada a:', this.value);
-            obtenerSueldo();
-        });
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
+    // Event listener para cantidad de hijos
     const tieneHijos = document.getElementById('tiene_hijos');
     const cantidadHijosDiv = document.getElementById('cantidad_hijos_div');
     const cantidadHijosInput = document.getElementById('cantidad_hijos');
+    
     function mostrarCantidadHijos() {
         if (tieneHijos.checked) {
             cantidadHijosDiv.style.display = '';
@@ -477,109 +396,9 @@ document.addEventListener('DOMContentLoaded', function() {
             cantidadHijosInput.required = false;
         }
     }
+    
     tieneHijos.addEventListener('change', mostrarCantidadHijos);
     mostrarCantidadHijos();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('createEmpleadoForm');
-    const requiredFields = {
-        cedula: {
-            element: document.getElementById('cedula'),
-            error: document.getElementById('cedula-error'),
-            message: 'Debe seleccionar un usuario'
-        },
-        cargo_id: {
-            element: document.getElementById('cargo_id'),
-            error: document.getElementById('cargo-error'),
-            message: 'Debe seleccionar un cargo'
-        },
-        departamento_id: {
-            element: document.getElementById('departamento_id'),
-            error: document.getElementById('departamento-error'),
-            message: 'Debe seleccionar un departamento'
-        },
-        horario_id: {
-            element: document.getElementById('horario_id'),
-            error: document.getElementById('horario-error'),
-            message: 'Debe seleccionar un horario'
-        },
-        estado_id: {
-            element: document.getElementById('estado_id'),
-            error: document.getElementById('estado-error'),
-            message: 'Debe seleccionar un estado'
-        },
-        salario: {
-            element: document.getElementById('salario'),
-            error: document.getElementById('salario-error'),
-            message: 'Debe ingresar un salario válido',
-            validate: (value) => !isNaN(value) && parseFloat(value) > 0
-        },
-        fecha_ingreso: {
-            element: document.getElementById('fecha_ingreso'),
-            error: document.getElementById('fecha-ingreso-error'),
-            message: 'Debe seleccionar una fecha de ingreso',
-            validate: (value) => value !== ''
-        }
-    };
-
-    // Real-time validation
-    Object.keys(requiredFields).forEach(key => {
-        const field = requiredFields[key];
-        
-        field.element.addEventListener('change', function() {
-            validateField(key);
-        });
-
-        field.element.addEventListener('blur', function() {
-            validateField(key);
-        });
-    });
-
-    function validateField(fieldName) {
-        const field = requiredFields[fieldName];
-        const value = field.element.value.trim();
-        
-        if (value === '') {
-            showError(field, field.message);
-            return false;
-        }
-
-        if (field.validate && !field.validate(value)) {
-            showError(field, field.message);
-            return false;
-        }
-
-        hideError(field);
-        return true;
-    }
-
-    function showError(field, message) {
-        field.element.classList.add('border-red-500');
-        field.error.textContent = message;
-        field.error.classList.remove('hidden');
-    }
-
-    function hideError(field) {
-        field.element.classList.remove('border-red-500');
-        field.error.classList.add('hidden');
-    }
-
-    // Form submission
-    form.addEventListener('submit', function(e) {
-        let isValid = true;
-
-        // Validate all fields
-        Object.keys(requiredFields).forEach(key => {
-            if (!validateField(key)) {
-                isValid = false;
-            }
-        });
-
-        if (!isValid) {
-            e.preventDefault();
-        }
-    });
 });
 </script>
 

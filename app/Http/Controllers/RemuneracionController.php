@@ -208,4 +208,27 @@ class RemuneracionController extends Controller
                 ->with('error', 'Error al importar: ' . $e->getMessage());
         }
     }
+    
+    /**
+     * Obtiene la remuneración para un grupo de cargo específico
+     */
+    public function getRemuneracionPorGrupo(string $grupoId)
+    {
+        // Buscar remuneración por grupo de cargo
+        $remuneracion = Remuneracion::where('grupo_cargo_id', $grupoId)
+            ->where('estado', 1)
+            ->first();
+            
+        if ($remuneracion) {
+            return response()->json([
+                'valor' => $remuneracion->valor,
+                'success' => true
+            ], 200);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'No se encontró remuneración para este grupo de cargo'
+        ], 404);
+    }
 }

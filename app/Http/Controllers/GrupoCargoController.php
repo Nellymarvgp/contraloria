@@ -103,4 +103,28 @@ class GrupoCargoController extends Controller
         return redirect()->route('grupos-cargos.index')
             ->with('success', 'Grupo de cargo eliminado correctamente.');
     }
+    
+    /**
+     * Obtiene los grupos de cargo filtrados por tipo.
+     */
+    public function getGruposPorTipo(string $tipo)
+    {
+        $mapeoCategoria = [
+            'bachiller' => 'administrativo_bachiller',
+            'tecnico_superior' => 'tecnico_superior',
+            'profesional_universitario' => 'profesional_universitario'
+        ];
+        
+        $categoria = $mapeoCategoria[$tipo] ?? null;
+        if (!$categoria) {
+            return response()->json([], 200);
+        }
+        
+        $grupos = GrupoCargo::where('categoria', $categoria)
+            ->where('estado', 1)
+            ->select('id', 'descripcion')
+            ->get();
+            
+        return response()->json($grupos, 200);
+    }
 }
