@@ -14,7 +14,7 @@
     </div>
 
     <div class="overflow-x-auto">
-        <table class="min-w-full">
+        <table id="datatable" class="min-w-full display nowrap" style="width:100%">
             <thead class="bg-gray-100">
                 <tr>
                     <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">ID</th>
@@ -67,3 +67,20 @@
     </div>
 </div>
 @endsection
+
+@push('datatable-scripts')
+<script>
+$(document).ready(function() {
+    $('#datatable').DataTable({
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+        },
+        dom: 'Bfrtip',
+        buttons: [
+            'excel', 'pdf', 'print'
+        ]
+    });
+});
+</script>
+@endpush

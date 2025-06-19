@@ -50,7 +50,7 @@
                 </div>
             @else
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
+                    <table id="datatable" class="min-w-full divide-y divide-gray-200 display nowrap" style="width:100%">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
@@ -102,11 +102,26 @@
                     </table>
                 </div>
 
-                <div class="mt-4 flex justify-center">
-                    {{ $nominas->links() }}
-                </div>
+            
             @endif
         </div>
     </div>
 </div>
 @endsection
+
+@push('datatable-scripts')
+<script>
+$(document).ready(function() {
+    $('#datatable').DataTable({
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+        },
+        dom: 'Bfrtip',
+        buttons: [
+            'excel', 'pdf', 'print'
+        ]
+    });
+});
+</script>
+@endpush

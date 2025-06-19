@@ -25,7 +25,7 @@
     @endif
 
     <div class="bg-white shadow-md rounded my-6 overflow-x-auto">
-        <table class="min-w-full bg-white">
+        <table id="datatable" class="min-w-full bg-white display nowrap" style="width:100%">
             <thead>
                 <tr class="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
                     <th class="py-3 px-6 text-left">Nombre</th>
@@ -61,9 +61,22 @@
             </tbody>
         </table>
     </div>
-
-    <div class="mt-4">
-        {{ $horarios->links() }}
-    </div>
 </div>
 @endsection
+
+@push('datatable-scripts')
+<script>
+$(document).ready(function() {
+    $('#datatable').DataTable({
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json'
+        },
+        dom: 'Bfrtip',
+        buttons: [
+            'excel', 'pdf', 'print'
+        ]
+    });
+});
+</script>
+@endpush
