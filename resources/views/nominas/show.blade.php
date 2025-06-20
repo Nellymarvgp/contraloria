@@ -19,6 +19,9 @@
     <a href="{{ route('nominas.exportPdf', $nomina) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center">
         <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
     </a>
+    <a href="{{ route('nominas.descargar.recibos', $nomina->id) }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center" target="_blank">
+        <i class="fas fa-file-pdf mr-2"></i> Descargar todos los recibos
+    </a>
 </div>
 
     @if(session('success'))

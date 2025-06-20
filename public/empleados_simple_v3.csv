@@ -1,0 +1,4 @@
+cedula,nombre,apellido,email,role_id,cargo_id,departamento_id,horario_id,estado_id,nivel_rango_id,grupo_cargo_id,tipo_cargo
+12345678,Juan,Pérez,juan.perez@example.com,2,1,1,1,1,1,1,administrativo
+23456789,María,González,maria.gonzalez@example.com,2,1,1,1,1,1,1,profesional_universitario
+34567890,Carlos,Rodríguez,carlos.rodriguez@example.com,2,1,1,1,1,1,1,tecnico_superior

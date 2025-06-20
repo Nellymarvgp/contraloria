@@ -55,7 +55,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         
         // Rutas de gestión de empleados
-        Route::resource('empleados', EmpleadoController::class);
+        Route::post('empleados/import', [App\Http\Controllers\EmpleadoController::class, 'import'])->name('empleados.import');
+Route::resource('empleados', EmpleadoController::class);
         Route::get('empleados-import', [EmpleadoController::class, 'importForm'])->name('empleados.import.form');
         Route::post('empleados-import', [EmpleadoController::class, 'import'])->name('empleados.import');
         Route::resource('cargos', CargoController::class)->except(['show']);
@@ -79,6 +80,7 @@ Route::middleware('auth')->group(function () {
         
         // Rutas para nóminas
         Route::resource('nominas', NominaController::class);
+    Route::get('nominas/{nomina}/descargar-recibos', [NominaController::class, 'descargarRecibos'])->name('nominas.descargar.recibos');
         Route::get('nominas/{nomina}/generate', [NominaController::class, 'generate'])->name('nominas.generate');
         Route::post('nominas/{nomina}/change-status', [NominaController::class, 'changeStatus'])->name('nominas.changeStatus');
         Route::get('nominas/{nomina}/export-pdf', [NominaController::class, 'exportPdf'])->name('nominas.exportPdf');

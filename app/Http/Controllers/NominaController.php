@@ -10,6 +10,7 @@ use App\Models\Estado;
 use App\Services\NominaCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class NominaController extends Controller
 {
@@ -222,5 +223,23 @@ class NominaController extends Controller
         
         return redirect()->route('nominas.index')
             ->with('success', 'Nómina eliminada correctamente.');
+    }
+
+    /**
+     * Descargar todos los recibos de una nómina en un solo PDF.
+     */
+    public function descargarRecibos($nominaId)
+    {
+        $nomina = \App\Models\Nomina::with(['detalles.conceptos', 'detalles.empleado.departamento', 'detalles.empleado.cargo'])->findOrFail($nominaId);
+        $recibos = [];
+        foreach ($nomina->detalles as $detalle) {
+            $recibos[] = [
+                'nomina' => $nomina,
+                'detalle' => $detalle,
+                'empleado' => $detalle->empleado,
+            ];
+        }
+        $pdf = Pdf::loadView('nominas.recibo', compact('recibos'))->setPaper('A4');
+        return $pdf->download('recibos_nomina_' . $nomina->id . '.pdf');
     }
 }

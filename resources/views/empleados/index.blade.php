@@ -7,9 +7,18 @@
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Lista de Empleados</h2>
-        <a href="{{ route('empleados.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            <i class="fas fa-plus mr-2"></i>Nuevo Empleado
-        </a>
+        <div class="flex gap-2">
+            <a href="{{ route('empleados.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center">
+                <i class="fas fa-plus mr-2"></i>Nuevo Empleado
+            </a>
+            <form action="{{ route('empleados.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-2">
+                @csrf
+                <label class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded cursor-pointer flex items-center mb-0">
+                    <i class="fas fa-file-import mr-2"></i> Importar
+                    <input type="file" name="archivo" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="hidden" onchange="this.form.submit()">
+                </label>
+            </form>
+        </div>
     </div>
 
     @if(session('success'))
@@ -46,9 +55,9 @@
                 @foreach($empleados as $empleado)
                     <tr class="border-b border-gray-200 hover:bg-gray-100">
                         <td class="py-3 px-6">{{ $empleado->cedula }}</td>
-                        <td class="py-3 px-6">{{ $empleado->user->nombre }} {{ $empleado->user->apellido }}</td>
-                        <td class="py-3 px-6">{{ $empleado->cargo->nombre }}</td>
-                        <td class="py-3 px-6">{{ $empleado->departamento->nombre }}</td>
+                        <td class="py-3 px-6">{{ $empleado->user->nombre ?? 'Sin nombre' }} {{ $empleado->user->apellido ?? '' }}</td>
+                        <td class="py-3 px-6">{{ $empleado->cargo->nombre ?? 'Sin cargo' }}</td>
+                        <td class="py-3 px-6">{{ $empleado->departamento->nombre ?? 'Sin departamento' }}</td>
                         <td class="py-3 px-6">
                             @if($empleado->tipo_cargo)
                                 @php
@@ -77,9 +86,13 @@
                             </div>
                         </td>
                         <td class="py-3 px-6">
-                            <span class="px-2 py-1 rounded-full text-xs" style="background-color: {{ $empleado->estado->color }}; color: {{ $empleado->estado->color === '#FFFFFF' ? '#000000' : '#FFFFFF' }}">
-                                {{ $empleado->estado->nombre }}
-                            </span>
+                            @if($empleado->estado)
+                                <span class="px-2 py-1 rounded-full text-xs" style="background-color: {{ $empleado->estado->color }}; color: {{ $empleado->estado->color === '#FFFFFF' ? '#000000' : '#FFFFFF' }}">
+                                    {{ $empleado->estado->nombre }}
+                                </span>
+                            @else
+                                <span class="px-2 py-1 rounded-full text-xs bg-gray-200 text-gray-700">Sin estado</span>
+                            @endif
                         </td>
                         <td class="py-3 px-6">{{ number_format($empleado->salario, 2) }}</td>
                         <td class="py-3 px-6">
