@@ -22,7 +22,8 @@ class CargoController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:255|unique:cargos',
-            'descripcion' => 'nullable|string'
+            'descripcion' => 'nullable|string',
+            'tipo_cargo' => 'required|string|in:Alto funcionario,Alto Nivel,Empleado,Obrero'
         ]);
 
         Cargo::create($request->all());
@@ -39,7 +40,8 @@ class CargoController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:255|unique:cargos,nombre,' . $cargo->id,
-            'descripcion' => 'nullable|string'
+            'descripcion' => 'nullable|string',
+            'tipo_cargo' => 'required|string|in:Alto funcionario,Alto Nivel,Empleado,Obrero'
         ]);
 
         $cargo->update($request->all());
