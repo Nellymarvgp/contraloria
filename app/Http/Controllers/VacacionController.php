@@ -20,7 +20,7 @@ class VacacionController extends Controller
         $user = auth()->user();
         
         if ($user->isAdmin()) {
-            $vacaciones = Vacacion::with(['empleado.user', 'aprobador'])
+            $vacaciones = Vacacion::with(['empleado.user', 'empleado.cargo', 'empleado.departamento', 'aprobador'])
                 ->orderBy('created_at', 'desc')
                 ->get();
         } else {
@@ -28,7 +28,8 @@ class VacacionController extends Controller
             if (!$empleado) {
                 return redirect()->route('dashboard')->with('error', 'No se encontró registro de empleado');
             }
-            $vacaciones = Vacacion::where('empleado_id', $empleado->id)
+            $vacaciones = Vacacion::with(['empleado.user', 'empleado.cargo', 'empleado.departamento'])
+                ->where('empleado_id', $empleado->id)
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -85,7 +86,7 @@ class VacacionController extends Controller
      */
     public function show(Vacacion $vacacion)
     {
-        $vacacion->load(['empleado.user', 'aprobador']);
+        $vacacion->load(['empleado.user', 'empleado.cargo', 'empleado.departamento', 'aprobador']);
         return view('vacaciones.show', compact('vacacion'));
     }
 

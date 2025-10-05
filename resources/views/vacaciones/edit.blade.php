@@ -33,7 +33,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-600">Nombre Completo</p>
-                        <p class="font-semibold text-gray-900">{{ $empleado->user->nombre ?? '' }} {{ $empleado->user->apellido ?? '' }}</p>
+                        <p class="font-semibold text-gray-900">
+                            @if($empleado->user)
+                                {{ $empleado->user->nombre }} {{ $empleado->user->apellido }}
+                            @else
+                                Empleado CI: {{ $empleado->cedula }}
+                            @endif
+                        </p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600">Cédula</p>
@@ -60,7 +66,7 @@
                                required
                                min="{{ date('Y-m-d') }}"
                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('fecha_inicio') border-red-500 @enderror"
-                               value="{{ old('fecha_inicio', $vacacion->fecha_inicio->format('Y-m-d')) }}">
+                               value="{{ old('fecha_inicio', $vacacion->fecha_inicio ? $vacacion->fecha_inicio->format('Y-m-d') : '') }}">
                         @error('fecha_inicio')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -76,7 +82,7 @@
                                required
                                min="{{ date('Y-m-d') }}"
                                class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('fecha_fin') border-red-500 @enderror"
-                               value="{{ old('fecha_fin', $vacacion->fecha_fin->format('Y-m-d')) }}">
+                               value="{{ old('fecha_fin', $vacacion->fecha_fin ? $vacacion->fecha_fin->format('Y-m-d') : '') }}">
                         @error('fecha_fin')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror

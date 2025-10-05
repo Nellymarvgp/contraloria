@@ -38,6 +38,7 @@
 
         <div class="p-6">
             <!-- Información del Empleado -->
+            @if($vacacion->empleado)
             <div class="mb-6 bg-blue-50 p-6 rounded-lg">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-user-circle text-blue-600 mr-2"></i>
@@ -46,7 +47,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-600">Nombre Completo</p>
-                        <p class="font-semibold text-gray-900">{{ $vacacion->empleado->user->nombre ?? '' }} {{ $vacacion->empleado->user->apellido ?? '' }}</p>
+                        <p class="font-semibold text-gray-900">
+                            @if($vacacion->empleado->user)
+                                {{ $vacacion->empleado->user->nombre }} {{ $vacacion->empleado->user->apellido }}
+                            @else
+                                Empleado CI: {{ $vacacion->empleado->cedula }}
+                            @endif
+                        </p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600">Cédula</p>
@@ -62,6 +69,11 @@
                     </div>
                 </div>
             </div>
+            @else
+            <div class="mb-6 bg-red-50 p-6 rounded-lg border border-red-200">
+                <p class="text-red-600"><i class="fas fa-exclamation-triangle mr-2"></i>El empleado asociado a esta solicitud no existe.</p>
+            </div>
+            @endif
 
             <!-- Detalles de la Solicitud -->
             <div class="mb-6">
@@ -72,13 +84,17 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <p class="text-sm text-gray-600 mb-1">Fecha de Inicio</p>
-                        <p class="text-xl font-bold text-gray-900">{{ $vacacion->fecha_inicio->format('d/m/Y') }}</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $vacacion->fecha_inicio ? $vacacion->fecha_inicio->format('d/m/Y') : 'N/A' }}</p>
+                        @if($vacacion->fecha_inicio)
                         <p class="text-xs text-gray-500 mt-1">{{ $vacacion->fecha_inicio->locale('es')->isoFormat('dddd') }}</p>
+                        @endif
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <p class="text-sm text-gray-600 mb-1">Fecha de Fin</p>
-                        <p class="text-xl font-bold text-gray-900">{{ $vacacion->fecha_fin->format('d/m/Y') }}</p>
+                        <p class="text-xl font-bold text-gray-900">{{ $vacacion->fecha_fin ? $vacacion->fecha_fin->format('d/m/Y') : 'N/A' }}</p>
+                        @if($vacacion->fecha_fin)
                         <p class="text-xs text-gray-500 mt-1">{{ $vacacion->fecha_fin->locale('es')->isoFormat('dddd') }}</p>
+                        @endif
                     </div>
                     <div class="bg-blue-50 p-4 rounded-lg">
                         <p class="text-sm text-gray-600 mb-1">Total de Días</p>
@@ -139,11 +155,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-gray-600">Fecha de Solicitud</p>
-                            <p class="font-semibold text-gray-900">{{ $vacacion->created_at->format('d/m/Y H:i') }}</p>
+                            <p class="font-semibold text-gray-900">{{ $vacacion->created_at ? $vacacion->created_at->format('d/m/Y H:i') : 'N/A' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Última Actualización</p>
-                            <p class="font-semibold text-gray-900">{{ $vacacion->updated_at->format('d/m/Y H:i') }}</p>
+                            <p class="font-semibold text-gray-900">{{ $vacacion->updated_at ? $vacacion->updated_at->format('d/m/Y H:i') : 'N/A' }}</p>
                         </div>
                     </div>
                 </div>
@@ -191,7 +207,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form action="{{ route('vacaciones.aprobar', $vacacion) }}" method="POST">
+            <form action="{{ route('vacaciones.aprobar', ['vacacion' => $vacacion->id]) }}" method="POST">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Comentario (opcional)</label>
@@ -220,7 +236,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form action="{{ route('vacaciones.rechazar', $vacacion) }}" method="POST">
+            <form action="{{ route('vacaciones.rechazar', ['vacacion' => $vacacion->id]) }}" method="POST">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Motivo del rechazo *</label>

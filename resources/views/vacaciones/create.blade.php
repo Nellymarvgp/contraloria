@@ -33,7 +33,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-600">Nombre Completo</p>
-                        <p class="font-semibold text-gray-900">{{ $empleado->user->nombre ?? '' }} {{ $empleado->user->apellido ?? '' }}</p>
+                        <p class="font-semibold text-gray-900">
+                            @if($empleado->user)
+                                {{ $empleado->user->nombre }} {{ $empleado->user->apellido }}
+                            @else
+                                Empleado CI: {{ $empleado->cedula }}
+                            @endif
+                        </p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600">Cédula</p>

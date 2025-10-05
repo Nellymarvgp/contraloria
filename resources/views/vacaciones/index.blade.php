@@ -4,6 +4,18 @@
 @section('header', 'Solicitudes de Vacaciones')
 
 @section('content')
+@if($vacaciones->isEmpty())
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-yellow-400"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-yellow-700">No hay solicitudes de vacaciones registradas.</p>
+            </div>
+        </div>
+    </div>
+@endif
 <div class="mb-6 flex justify-end items-center">
     @if(!auth()->user()->isAdmin())
     <a href="{{ route('vacaciones.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center transition duration-150">
@@ -55,20 +67,26 @@
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">
-                                    {{ $vacacion->empleado->user->nombre ?? '' }} {{ $vacacion->empleado->user->apellido ?? '' }}
+                                    @if($vacacion->empleado && $vacacion->empleado->user)
+                                        {{ $vacacion->empleado->user->nombre }} {{ $vacacion->empleado->user->apellido }}
+                                    @elseif($vacacion->empleado)
+                                        Empleado CI: {{ $vacacion->empleado->cedula }}
+                                    @else
+                                        Empleado no encontrado
+                                    @endif
                                 </div>
-                                <div class="text-sm text-gray-500">{{ $vacacion->empleado->cedula }}</div>
+                                <div class="text-sm text-gray-500">{{ $vacacion->empleado->cedula ?? 'N/A' }}</div>
                             </div>
                         </div>
                     </td>
                     @endif
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <i class="far fa-calendar text-blue-500 mr-1"></i>
-                        {{ $vacacion->fecha_inicio->format('d/m/Y') }}
+                        {{ $vacacion->fecha_inicio ? $vacacion->fecha_inicio->format('d/m/Y') : 'N/A' }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <i class="far fa-calendar text-blue-500 mr-1"></i>
-                        {{ $vacacion->fecha_fin->format('d/m/Y') }}
+                        {{ $vacacion->fecha_fin ? $vacacion->fecha_fin->format('d/m/Y') : 'N/A' }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
@@ -91,7 +109,7 @@
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $vacacion->created_at->format('d/m/Y H:i') }}
+                        {{ $vacacion->created_at ? $vacacion->created_at->format('d/m/Y H:i') : 'N/A' }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex gap-2">
@@ -141,6 +159,7 @@
             </div>
             <form id="approveForm" method="POST">
                 @csrf
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Comentario (opcional)</label>
                     <textarea name="comentario_admin" rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
@@ -170,6 +189,7 @@
             </div>
             <form id="rejectForm" method="POST">
                 @csrf
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Motivo del rechazo *</label>
                     <textarea name="comentario_admin" rows="3" required class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring-red-500"></textarea>
@@ -199,8 +219,13 @@ $(document).ready(function() {
     });
 });
 
+const routes = {
+    aprobar: @json(route('vacaciones.aprobar', ['vacacion' => '__ID__'])),
+    rechazar: @json(route('vacaciones.rechazar', ['vacacion' => '__ID__']))
+};
+
 function openApproveModal(id) {
-    document.getElementById('approveForm').action = `/vacaciones/${id}/aprobar`;
+    document.getElementById('approveForm').action = routes.aprobar.replace('__ID__', id);
     document.getElementById('approveModal').classList.remove('hidden');
 }
 
@@ -209,7 +234,7 @@ function closeApproveModal() {
 }
 
 function openRejectModal(id) {
-    document.getElementById('rejectForm').action = `/vacaciones/${id}/rechazar`;
+    document.getElementById('rejectForm').action = routes.rechazar.replace('__ID__', id);
     document.getElementById('rejectModal').classList.remove('hidden');
 }
 
