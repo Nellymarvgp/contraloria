@@ -89,4 +89,12 @@ class Empleado extends Model
     {
         return $this->belongsToMany(\App\Models\Deduccion::class, 'empleado_deduccion', 'empleado_id', 'deduccion_id')->withPivot('valor_extra')->where('tipo', 'deduccion');
     }
+
+    /**
+     * Solicitudes de vacaciones del empleado.
+     */
+    public function vacaciones()
+    {
+        return $this->hasMany(Vacacion::class);
+    }
 }

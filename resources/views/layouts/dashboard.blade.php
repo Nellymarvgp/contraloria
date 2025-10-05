@@ -103,6 +103,11 @@
                     <i class="fas fa-chart-bar mr-2"></i> Reportes
                 </a>
                 @endif
+                
+                <!-- Vacaciones (disponible para todos) -->
+                <a href="{{ route('vacaciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('vacaciones.*') ? 'bg-gray-700' : '' }}">
+                    <i class="fas fa-umbrella-beach mr-2"></i> Vacaciones
+                </a>
             </nav>
         </div>
 

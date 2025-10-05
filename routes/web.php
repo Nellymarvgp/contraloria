@@ -22,6 +22,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\NominaController;
+use App\Http\Controllers\VacacionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -49,6 +50,11 @@ Route::middleware('auth')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::get('profile/edit', [UserController::class, 'edit'])->name('profile.edit');
     Route::put('profile/update', [UserController::class, 'update'])->name('profile.update');
+    
+    // Rutas de vacaciones (disponibles para todos los usuarios autenticados)
+    Route::resource('vacaciones', VacacionController::class);
+    Route::post('vacaciones/{vacacion}/aprobar', [VacacionController::class, 'aprobar'])->name('vacaciones.aprobar');
+    Route::post('vacaciones/{vacacion}/rechazar', [VacacionController::class, 'rechazar'])->name('vacaciones.rechazar');
     
     // Rutas de administrador
     Route::middleware(\App\Http\Middleware\AdminMiddleware::class)->group(function () {
