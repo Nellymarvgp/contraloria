@@ -12,7 +12,6 @@
             Volver a Solicitudes
         </a>
     </div>
-
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <!-- Header con estado -->
         <div class="px-6 py-4 {{ $vacacion->estado === 'aprobada' ? 'bg-gradient-to-r from-green-500 to-green-600' : ($vacacion->estado === 'rechazada' ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-yellow-500 to-yellow-600') }}">
