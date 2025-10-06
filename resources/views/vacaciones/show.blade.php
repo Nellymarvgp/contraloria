@@ -188,7 +188,7 @@
                         <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-150">
                             <i class="fas fa-trash mr-2"></i>
                             Eliminar Solicitud
-                        </button>
+{{ ... }}
                     </form>
                 @endif
             </div>

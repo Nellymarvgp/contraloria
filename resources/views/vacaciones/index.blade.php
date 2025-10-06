@@ -157,7 +157,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="approveForm" method="POST">
+            <form method="POST" id="approveForm" data-action="{{ route('vacaciones.aprobar', ['__ID__']) }}">
                 @csrf
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
@@ -187,7 +187,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="rejectForm" method="POST">
+            <form method="POST" id="rejectForm" data-action="{{ route('vacaciones.rechazar', ['__ID__']) }}">
                 @csrf
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
@@ -225,7 +225,8 @@ const routes = {
 };
 
 function openApproveModal(id) {
-    document.getElementById('approveForm').action = routes.aprobar.replace('__ID__', id);
+    const form = document.getElementById('approveForm');
+    form.action = form.dataset.action.replace('__ID__', id);
     document.getElementById('approveModal').classList.remove('hidden');
 }
 
@@ -234,7 +235,8 @@ function closeApproveModal() {
 }
 
 function openRejectModal(id) {
-    document.getElementById('rejectForm').action = routes.rechazar.replace('__ID__', id);
+    const form = document.getElementById('rejectForm');
+    form.action = form.dataset.action.replace('__ID__', id);
     document.getElementById('rejectModal').classList.remove('hidden');
 }
 
