@@ -45,7 +45,7 @@ class DeduccionController extends Controller
     /**
      * Store a newly created deduccion in storage.
      */
-<<<<<<< Updated upstream
+
     public function store(Request $request)
     {
         $tipo = $request->input('tipo', 'deduccion');
@@ -94,15 +94,6 @@ class DeduccionController extends Controller
                   (($tipo === 'beneficio') ? 'Beneficio creado exitosamente.' :
                    'Parámetro creado exitosamente.');
 
-        return redirect()->route('deducciones.index', ['tipo' => $tipo])
-            ->with('success', $message);
-    }
-
-=======
-   public function store(Request $request)
-{
-    $tipo = $request->input('tipo', 'deduccion');
-
     if (!in_array($tipo, ['deduccion', 'beneficio', 'parametro'])) {
         $tipo = 'deduccion';
     }
@@ -148,7 +139,6 @@ class DeduccionController extends Controller
         ->with('success', $message);
 }
 
->>>>>>> Stashed changes
     /**
      * Show the form for editing the specified deduccion.
      */

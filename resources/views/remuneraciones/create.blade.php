@@ -147,16 +147,7 @@
             </div>
 
             <script>
-<<<<<<< Updated upstream
-                function toggleFields() {
-                    var tipo = document.getElementById('tipo_personal').value;
-                    document.getElementById('funcionarios_fields').style.display = tipo === 'administracion_publica' ? '' : 'none';
-                    document.getElementById('obrero_fields').style.display = tipo === 'obreros' ? '' : 'none';
-                }
-                document.getElementById('tipo_personal').addEventListener('change', toggleFields);
-                window.onload = toggleFields;
-            </script>
-=======
+
                  function toggleFields() {
                     const tipo = document.getElementById('tipo_personal').value;
 
@@ -175,12 +166,10 @@
                     valorObrero.disabled = tipo !== 'obreros';
                 }
 
+
             window.addEventListener('DOMContentLoaded', toggleFields);
             document.getElementById('tipo_personal').addEventListener('change', toggleFields);
         </script>
-
->>>>>>> Stashed changes
-            
 
             
             <div class="mb-4">

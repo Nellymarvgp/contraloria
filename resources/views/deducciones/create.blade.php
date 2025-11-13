@@ -33,7 +33,7 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
-<<<<<<< Updated upstream
+
             
             @if($tipo !== 'parametro')
             <!-- Tipo de Valor (Radio Buttons) -->
@@ -105,11 +105,17 @@
                 @enderror
             </div>
             @endif
-=======
+
             <input type="hidden" name="es_fijo" :value="valorTipo === 'fijo' ? '1' : '0'">
 
             
             @if($tipo !== 'parametro')
+
+            <input type="hidden" name="es_fijo" :value="valorTipo === 'fijo' ? '1' : '0'">
+
+            
+            @if($tipo !== 'parametro')
+
 <div x-data="{ valorTipo: '{{ old('es_fijo', '0') === '1' ? 'fijo' : 'porcentaje' }}' }">
     <!-- Campo oculto para sincronizar con Laravel -->
     <input type="hidden" name="es_fijo" :value="valorTipo === 'fijo' ? '1' : '0'">
@@ -164,9 +170,6 @@
 </div>
 @endif
 
-
-
->>>>>>> Stashed changes
             
             <!-- Estado -->
             <div>
