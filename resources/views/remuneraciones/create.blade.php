@@ -147,6 +147,7 @@
             </div>
 
             <script>
+<<<<<<< Updated upstream
                 function toggleFields() {
                     var tipo = document.getElementById('tipo_personal').value;
                     document.getElementById('funcionarios_fields').style.display = tipo === 'administracion_publica' ? '' : 'none';
@@ -155,6 +156,30 @@
                 document.getElementById('tipo_personal').addEventListener('change', toggleFields);
                 window.onload = toggleFields;
             </script>
+=======
+                 function toggleFields() {
+                    const tipo = document.getElementById('tipo_personal').value;
+
+                     const funcionariosFields = document.getElementById('funcionarios_fields');
+                    const obreroFields = document.getElementById('obrero_fields');
+
+                     const valorFuncionario = document.getElementById('valor');
+                     const valorObrero = document.getElementById('valor_obrero');
+
+                     // Mostrar/ocultar bloques
+                     funcionariosFields.style.display = tipo === 'administracion_publica' ? '' : 'none';
+                    obreroFields.style.display = tipo === 'obreros' ? '' : 'none';
+
+                    // Activar solo el campo relevante
+                    valorFuncionario.disabled = tipo !== 'administracion_publica';
+                    valorObrero.disabled = tipo !== 'obreros';
+                }
+
+            window.addEventListener('DOMContentLoaded', toggleFields);
+            document.getElementById('tipo_personal').addEventListener('change', toggleFields);
+        </script>
+
+>>>>>>> Stashed changes
             
 
             

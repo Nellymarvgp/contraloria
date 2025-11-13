@@ -33,6 +33,7 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
+<<<<<<< Updated upstream
             
             @if($tipo !== 'parametro')
             <!-- Tipo de Valor (Radio Buttons) -->
@@ -104,6 +105,68 @@
                 @enderror
             </div>
             @endif
+=======
+            <input type="hidden" name="es_fijo" :value="valorTipo === 'fijo' ? '1' : '0'">
+
+            
+            @if($tipo !== 'parametro')
+<div x-data="{ valorTipo: '{{ old('es_fijo', '0') === '1' ? 'fijo' : 'porcentaje' }}' }">
+    <!-- Campo oculto para sincronizar con Laravel -->
+    <input type="hidden" name="es_fijo" :value="valorTipo === 'fijo' ? '1' : '0'">
+
+    <!-- Tipo de Valor -->
+    <div class="col-span-2">
+        <div class="block text-sm font-medium text-gray-700 mb-2">
+            Tipo de Valor <span class="text-red-500">*</span>
+        </div>
+        <div class="flex space-x-4">
+            <label class="inline-flex items-center">
+                <input type="radio" value="porcentaje" x-model="valorTipo"
+                       class="form-radio text-indigo-600">
+                <span class="ml-2">Porcentaje</span>
+            </label>
+            <label class="inline-flex items-center">
+                <input type="radio" value="fijo" x-model="valorTipo"
+                       class="form-radio text-indigo-600">
+                <span class="ml-2">Monto Fijo</span>
+            </label>
+        </div>
+        @error('es_fijo')
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <!-- Porcentaje -->
+    <div x-show="valorTipo === 'porcentaje'" x-cloak>
+        <label for="porcentaje" class="block text-sm font-medium text-gray-700 mb-1">Porcentaje (%)</label>
+        <input type="number" name="porcentaje" id="porcentaje"
+               x-bind:disabled="valorTipo !== 'porcentaje'"
+               value="{{ old('porcentaje') }}"
+               step="0.01" min="0" {{ $tipo === 'deduccion' ? 'max=100' : '' }}
+               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+        @error('porcentaje')
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <!-- Monto Fijo -->
+    <div x-show="valorTipo === 'fijo'" x-cloak>
+        <label for="monto_fijo" class="block text-sm font-medium text-gray-700 mb-1">Monto Fijo</label>
+        <input type="number" name="monto_fijo" id="monto_fijo"
+               x-bind:disabled="valorTipo !== 'fijo'"
+               value="{{ old('monto_fijo') }}"
+               step="0.01" min="0"
+               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+        @error('monto_fijo')
+            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+        @enderror
+    </div>
+</div>
+@endif
+
+
+
+>>>>>>> Stashed changes
             
             <!-- Estado -->
             <div>

@@ -45,6 +45,7 @@ class DeduccionController extends Controller
     /**
      * Store a newly created deduccion in storage.
      */
+<<<<<<< Updated upstream
     public function store(Request $request)
     {
         $tipo = $request->input('tipo', 'deduccion');
@@ -97,6 +98,57 @@ class DeduccionController extends Controller
             ->with('success', $message);
     }
 
+=======
+   public function store(Request $request)
+{
+    $tipo = $request->input('tipo', 'deduccion');
+
+    if (!in_array($tipo, ['deduccion', 'beneficio', 'parametro'])) {
+        $tipo = 'deduccion';
+    }
+
+    $esFijo = $request->input('es_fijo') == '1';
+
+    // Reglas base
+    $rules = [
+        'nombre' => 'required|string|max:100',
+        'descripcion' => 'nullable|string',
+        'es_fijo' => 'required|in:0,1',
+        'activo' => 'boolean',
+    ];
+
+    if ($tipo === 'parametro') {
+        $rules['campo'] = 'required|string|max:20';
+        $rules['monto_fijo'] = 'required|numeric|min:0';
+    } else {
+        if ($esFijo) {
+            $rules['monto_fijo'] = 'required|numeric|min:0';
+            $rules['porcentaje'] = 'nullable|numeric|min:0';
+        } else {
+            $rules['porcentaje'] = 'required|numeric|min:0';
+            if ($tipo === 'deduccion') {
+                $rules['porcentaje'] .= '|max:100';
+            }
+            $rules['monto_fijo'] = 'nullable|numeric|min:0';
+        }
+    }
+
+    $validated = $request->validate($rules);
+    $validated['tipo'] = $tipo;
+
+    Deduccion::create($validated);
+
+    $message = match ($tipo) {
+        'deduccion' => 'Deducción creada exitosamente.',
+        'beneficio' => 'Beneficio creado exitosamente.',
+        'parametro' => 'Parámetro creado exitosamente.',
+    };
+
+    return redirect()->route('deducciones.index', ['tipo' => $tipo])
+        ->with('success', $message);
+}
+
+>>>>>>> Stashed changes
     /**
      * Show the form for editing the specified deduccion.
      */
