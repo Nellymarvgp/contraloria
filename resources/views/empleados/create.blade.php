@@ -286,6 +286,9 @@ function mostrarOcultarCampos() {
         document.getElementById('grupo_cargo_id').innerHTML = '<option value="">Seleccione un grupo</option>';
         document.getElementById('salario').value = '';
     }
+    if (tipo === 'obreros') {
+        document.getElementById('salario').value = '';
+    }
 }
 
 // Filtrar grupos de cargo según el tipo seleccionado
@@ -367,6 +370,39 @@ function obtenerSalarioPorGrupo() {
         });
 }
 
+// Obtener el salario para obreros según clasificación y grado
+function obtenerSalarioObrero() {
+    const tipo = document.getElementById('tipo_personal').value;
+    if (tipo !== 'obreros') return;
+    const clasificacion = document.getElementById('clasificacion').value;
+    const grado = document.getElementById('grado').value;
+    const salarioInput = document.getElementById('salario');
+    salarioInput.value = '';
+    if (!clasificacion || !grado) {
+        return;
+    }
+    const params = new URLSearchParams({
+        tipo_personal: 'obreros',
+        clasificacion: clasificacion,
+        grado: grado
+    });
+    fetch(`/remuneracion?${params.toString()}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener salario: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.valor) {
+                salarioInput.value = data.valor;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
 // Configurar los event listeners cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     // Mostrar/ocultar campos según el tipo de personal inicial
@@ -380,6 +416,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listener para grupo_cargo_id
     document.getElementById('grupo_cargo_id').addEventListener('change', obtenerSalarioPorGrupo);
+    
+    // Event listeners para obreros
+    document.getElementById('clasificacion').addEventListener('change', obtenerSalarioObrero);
+    document.getElementById('grado').addEventListener('change', obtenerSalarioObrero);
     
     // Event listener para cantidad de hijos
     const tieneHijos = document.getElementById('tiene_hijos');
