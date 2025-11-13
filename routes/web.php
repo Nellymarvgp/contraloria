@@ -12,6 +12,7 @@ use App\Http\Controllers\PrimaProfesionalizacionController;
 use App\Http\Controllers\NivelRangoController;
 use App\Http\Controllers\GrupoCargoController;
 use App\Http\Controllers\RemuneracionController;
+use App\Http\Controllers\RemuneracionApiController;
 use App\Http\Controllers\DeduccionController;
 use App\Http\Controllers\DeductionConfigController;
 use App\Http\Controllers\BenefitConfigController;
@@ -104,5 +105,7 @@ Route::resource('empleados', EmpleadoController::class);
         // Rutas AJAX para empleados
         Route::get('grupos-por-tipo/{tipo}', [GrupoCargoController::class, 'getGruposPorTipo'])->name('grupos.por.tipo');
         Route::get('remuneracion-por-grupo/{grupoId}', [RemuneracionController::class, 'getRemuneracionPorGrupo'])->name('remuneracion.por.grupo');
+        // Ruta AJAX general para obtener remuneración por parámetros (incluye obreros)
+        Route::get('remuneracion', [RemuneracionApiController::class, 'obtener'])->name('remuneracion.obtener');
     });
 });
