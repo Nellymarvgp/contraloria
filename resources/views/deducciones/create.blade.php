@@ -33,10 +33,89 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
+
+            
+            @if($tipo !== 'parametro')
+            <!-- Tipo de Valor (Radio Buttons) -->
+            <div class="col-span-2">
+                <div class="block text-sm font-medium text-gray-700 mb-2">Tipo de Valor <span class="text-red-500">*</span></div>
+                <div class="flex space-x-4" x-data="{ valorTipo: '{{ old('es_fijo') === '1' ? 'fijo' : 'porcentaje' }}' }">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="es_fijo" value="0" class="form-radio text-indigo-600" x-model="valorTipo" x-on:change="valorTipo = 'porcentaje'" {{ old('es_fijo', '0') == '0' ? 'checked' : '' }}>
+                        <span class="ml-2">Porcentaje</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="es_fijo" value="1" class="form-radio text-indigo-600" x-model="valorTipo" x-on:change="valorTipo = 'fijo'" {{ old('es_fijo') == '1' ? 'checked' : '' }}>
+                        <span class="ml-2">Monto Fijo</span>
+                    </label>
+                </div>
+                @error('es_fijo')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            @else
+            <!-- Campo para parámetros -->
+            <div>
+                <label for="campo" class="block text-sm font-medium text-gray-700 mb-1">Campo <span class="text-red-500">*</span></label>
+                <input type="text" name="campo" id="campo" value="{{ old('campo') }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                <p class="text-xs text-gray-500 mt-1">Nombre del campo en el sistema (TXT, etc.)</p>
+                @error('campo')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <!-- Valor para parámetros (siempre es fijo) -->
+            <div>
+                <label for="monto_fijo" class="block text-sm font-medium text-gray-700 mb-1">Valor <span class="text-red-500">*</span></label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <input type="number" name="monto_fijo" id="monto_fijo" value="{{ old('monto_fijo') }}" step="0.01" min="0" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                </div>
+                <input type="hidden" name="es_fijo" value="1">
+                @error('monto_fijo')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            @endif
+            
+            @if($tipo !== 'parametro')
+            <!-- Porcentaje (visible si tipo es porcentaje) -->
+            <div x-data="{ valorTipo: '{{ old('es_fijo') === '1' ? 'fijo' : 'porcentaje' }}' }" x-show="valorTipo === 'porcentaje'">
+                <label for="porcentaje" class="block text-sm font-medium text-gray-700 mb-1">Porcentaje (%)</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <input type="number" name="porcentaje" id="porcentaje" value="{{ old('porcentaje') }}" step="0.01" min="0" {{ $tipo === 'deduccion' ? 'max="100"' : '' }} class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">%</span>
+                    </div>
+                </div>
+                @error('porcentaje')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            
+            <!-- Monto Fijo (visible si tipo es fijo) -->
+            <div x-data="{ valorTipo: '{{ old('es_fijo') === '1' ? 'fijo' : 'porcentaje' }}' }" x-show="valorTipo === 'fijo'">
+                <label for="monto_fijo" class="block text-sm font-medium text-gray-700 mb-1">Monto Fijo</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input type="number" name="monto_fijo" id="monto_fijo" value="{{ old('monto_fijo') }}" step="0.01" min="0" class="pl-7 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                @error('monto_fijo')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            @endif
+
             <input type="hidden" name="es_fijo" :value="valorTipo === 'fijo' ? '1' : '0'">
 
             
             @if($tipo !== 'parametro')
+
+            <input type="hidden" name="es_fijo" :value="valorTipo === 'fijo' ? '1' : '0'">
+
+            
+            @if($tipo !== 'parametro')
+
 <div x-data="{ valorTipo: '{{ old('es_fijo', '0') === '1' ? 'fijo' : 'porcentaje' }}' }">
     <!-- Campo oculto para sincronizar con Laravel -->
     <input type="hidden" name="es_fijo" :value="valorTipo === 'fijo' ? '1' : '0'">
@@ -90,8 +169,6 @@
     </div>
 </div>
 @endif
-
-
 
             
             <!-- Estado -->

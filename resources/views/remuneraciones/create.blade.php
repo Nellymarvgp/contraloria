@@ -147,6 +147,7 @@
             </div>
 
             <script>
+
                  function toggleFields() {
                     const tipo = document.getElementById('tipo_personal').value;
 
@@ -165,11 +166,10 @@
                     valorObrero.disabled = tipo !== 'obreros';
                 }
 
+
             window.addEventListener('DOMContentLoaded', toggleFields);
             document.getElementById('tipo_personal').addEventListener('change', toggleFields);
         </script>
-
-            
 
             
             <div class="mb-4">

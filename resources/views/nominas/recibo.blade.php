@@ -23,6 +23,8 @@
             <b>Nómina:</b> {{ $recibo['nomina']->nombre }}<br>
             <b>Periodo:</b> {{ $recibo['nomina']->fecha_inicio->format('d/m/Y') }} al {{ $recibo['nomina']->fecha_fin->format('d/m/Y') }}<br>
             <b>Despacho:</b> {{ $recibo['empleado']->departamento->nombre ?? '' }}<br>
+            <b>Empleado:</b> {{ $recibo['empleado']->nombre }} {{ $recibo['empleado']->apellido }}<br>
+            <b>Empleado:</b> {{ $recibo['empleado']->user->nombre }} {{ $recibo['empleado']->user->apellido }}<br>
             <b>Empleado:</b> {{ $recibo['empleado']->user->nombre }} {{ $recibo['empleado']->user->apellido }}<br>
             <b>Cédula:</b> {{ $recibo['empleado']->cedula }}<br>
             <b>Fecha de Ingreso:</b> {{ $recibo['empleado']->fecha_ingreso ? $recibo['empleado']->fecha_ingreso->format('d/m/Y') : '' }}<br>

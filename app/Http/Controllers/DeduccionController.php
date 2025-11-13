@@ -45,9 +45,54 @@ class DeduccionController extends Controller
     /**
      * Store a newly created deduccion in storage.
      */
-   public function store(Request $request)
-{
-    $tipo = $request->input('tipo', 'deduccion');
+
+    public function store(Request $request)
+    {
+        $tipo = $request->input('tipo', 'deduccion');
+        
+        // Validar que el tipo sea válido
+        if (!in_array($tipo, ['deduccion', 'beneficio', 'parametro'])) {
+            $tipo = 'deduccion';
+        }
+        
+        // Reglas básicas para todos los tipos
+        $rules = [
+            'nombre' => 'required|string|max:100',
+            'descripcion' => 'nullable|string',
+            'es_fijo' => 'boolean',
+            'activo' => 'boolean',
+        ];
+        
+        // Reglas adicionales según el tipo
+        if ($tipo === 'parametro') {
+            $rules['campo'] = 'required|string|max:20';
+            $rules['monto_fijo'] = 'required|numeric|min:0';
+        } else {
+            // Para deducciones y beneficios
+            if ($request->input('es_fijo')) {
+                $rules['monto_fijo'] = 'required|numeric|min:0';
+                $rules['porcentaje'] = 'nullable|numeric|min:0';
+            } else {
+                $rules['porcentaje'] = 'required|numeric|min:0';
+                if ($tipo === 'deduccion') {
+                    $rules['porcentaje'] .= '|max:100'; // Para deducciones, máximo 100%
+                }
+                $rules['monto_fijo'] = 'nullable|numeric|min:0';
+            }
+        }
+        
+        $validated = $request->validate($rules);
+        
+        // Agregar el tipo al array validado
+        $validated['tipo'] = $tipo;
+        
+        // Crear el registro
+        Deduccion::create($validated);
+        
+        // Redirigir según el tipo
+        $message = ($tipo === 'deduccion') ? 'Deducción creada exitosamente.' :
+                  (($tipo === 'beneficio') ? 'Beneficio creado exitosamente.' :
+                   'Parámetro creado exitosamente.');
 
     if (!in_array($tipo, ['deduccion', 'beneficio', 'parametro'])) {
         $tipo = 'deduccion';
