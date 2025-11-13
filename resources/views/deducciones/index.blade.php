@@ -25,7 +25,7 @@
                 Beneficios
             </a>
             <a href="{{ route('deducciones.index', ['tipo' => 'parametro']) }}" class="py-2 px-4 {{ $tipo === 'parametro' ? 'border-b-2 border-blue-500 text-blue-600 font-semibold' : 'text-gray-600 hover:text-gray-800' }}">
-                Parámetros de Nómina
+                Parámetros de Nóminas
             </a>
         </div>
     </div>
