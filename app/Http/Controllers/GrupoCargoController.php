@@ -21,7 +21,12 @@ class GrupoCargoController extends Controller
      */
     public function create()
     {
-        return view('grupos-cargos.create');
+        $categorias = [
+            'administrativo_bachiller' => 'Personal administrativo o bachilleres',
+            'tecnico_superior' => 'Personal técnico superior universitario',
+            'profesional_universitario' => 'Personal profesional universitario',
+        ];
+        return view('grupos-cargos.create', compact('categorias'));
     }
 
     /**
@@ -31,11 +36,13 @@ class GrupoCargoController extends Controller
     {
         $request->validate([
             'descripcion' => 'required|string|max:255',
+            'categoria' => 'required|in:administrativo_bachiller,tecnico_superior,profesional_universitario',
         ]);
         
         GrupoCargo::create([
             'descripcion' => $request->descripcion,
             'estado' => $request->has('estado') ? 1 : 0,
+            'categoria' => $request->categoria,
         ]);
         
         return redirect()->route('grupos-cargos.index')
@@ -56,7 +63,12 @@ class GrupoCargoController extends Controller
     public function edit(string $id)
     {
         $grupo = GrupoCargo::findOrFail($id);
-        return view('grupos-cargos.edit', compact('grupo'));
+        $categorias = [
+            'administrativo_bachiller' => 'Personal administrativo o bachilleres',
+            'tecnico_superior' => 'Personal técnico superior universitario',
+            'profesional_universitario' => 'Personal profesional universitario',
+        ];
+        return view('grupos-cargos.edit', compact('grupo', 'categorias'));
     }
 
     /**
@@ -66,12 +78,14 @@ class GrupoCargoController extends Controller
     {
         $request->validate([
             'descripcion' => 'required|string|max:255',
+            'categoria' => 'required|in:administrativo_bachiller,tecnico_superior,profesional_universitario',
         ]);
         
         $grupo = GrupoCargo::findOrFail($id);
         $grupo->update([
             'descripcion' => $request->descripcion,
             'estado' => $request->has('estado') ? 1 : 0,
+            'categoria' => $request->categoria,
         ]);
         
         return redirect()->route('grupos-cargos.index')
@@ -88,5 +102,29 @@ class GrupoCargoController extends Controller
         
         return redirect()->route('grupos-cargos.index')
             ->with('success', 'Grupo de cargo eliminado correctamente.');
+    }
+    
+    /**
+     * Obtiene los grupos de cargo filtrados por tipo.
+     */
+    public function getGruposPorTipo(string $tipo)
+    {
+        $mapeoCategoria = [
+            'bachiller' => 'administrativo_bachiller',
+            'tecnico_superior' => 'tecnico_superior',
+            'profesional_universitario' => 'profesional_universitario'
+        ];
+        
+        $categoria = $mapeoCategoria[$tipo] ?? null;
+        if (!$categoria) {
+            return response()->json([], 200);
+        }
+        
+        $grupos = GrupoCargo::where('categoria', $categoria)
+            ->where('estado', 1)
+            ->select('id', 'descripcion')
+            ->get();
+            
+        return response()->json($grupos, 200);
     }
 }

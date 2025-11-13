@@ -19,7 +19,9 @@ class Empleado extends Model
         'prima_profesionalizacion_id',
         'nivel_rango_id',
         'grupo_cargo_id',
-        'tipo_cargo'
+        'tipo_cargo',
+        'tiene_hijos',
+        'cantidad_hijos'
     ];
 
     protected $casts = [
@@ -70,5 +72,29 @@ class Empleado extends Model
     public function grupoCargo()
     {
         return $this->belongsTo(GrupoCargo::class);
+    }
+
+    /**
+     * Beneficios personalizados asociados al empleado.
+     */
+    public function beneficios()
+    {
+        return $this->belongsToMany(\App\Models\Deduccion::class, 'empleado_beneficio', 'empleado_id', 'deduccion_id')->withPivot('valor_extra')->where('tipo', 'beneficio');
+    }
+
+    /**
+     * Deducciones personalizadas asociadas al empleado.
+     */
+    public function deducciones()
+    {
+        return $this->belongsToMany(\App\Models\Deduccion::class, 'empleado_deduccion', 'empleado_id', 'deduccion_id')->withPivot('valor_extra')->where('tipo', 'deduccion');
+    }
+
+    /**
+     * Solicitudes de vacaciones del empleado.
+     */
+    public function vacaciones()
+    {
+        return $this->hasMany(Vacacion::class);
     }
 }

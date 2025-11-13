@@ -8,6 +8,7 @@ class GrupoCargo extends Model
 {
     protected $fillable = [
         'descripcion',
-        'estado'
+        'estado',
+        'categoria'
     ];
 }

@@ -6,6 +6,8 @@ use App\Models\Remuneracion;
 use App\Models\NivelRango;
 use App\Models\GrupoCargo;
 use Illuminate\Http\Request;
+use App\Imports\RemuneracionesImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RemuneracionController extends Controller
 {
@@ -26,12 +28,17 @@ class RemuneracionController extends Controller
         $nivelesRangos = NivelRango::where('estado', 1)->get();
         $gruposCargos = GrupoCargo::where('estado', 1)->get();
         $tiposCargo = [
-            'administrativo' => 'Administrativo',
+            'bachiller' => 'Bachiller',
             'tecnico_superior' => 'Técnico Superior Universitario',
             'profesional_universitario' => 'Profesional Universitario'
         ];
         
-        return view('remuneraciones.create', compact('nivelesRangos', 'gruposCargos', 'tiposCargo'));
+        $tiposPersonal = [
+            'obreros' => 'Obreros',
+            'administracion_publica' => 'Administración Pública'
+        ];
+        
+        return view('remuneraciones.create', compact('nivelesRangos', 'gruposCargos', 'tiposCargo', 'tiposPersonal'));
     }
 
     /**
@@ -39,20 +46,45 @@ class RemuneracionController extends Controller
      */
     public function store(Request $request)
     {
+        // Validación común para todos los tipos de personal
         $request->validate([
-            'nivel_rango_id' => 'required|exists:nivel_rangos,id',
-            'grupo_cargo_id' => 'required|exists:grupo_cargos,id',
-            'tipo_cargo' => 'required|in:administrativo,tecnico_superior,profesional_universitario',
-            'valor' => 'required|numeric|min:0',
+            'tipo_personal' => 'required|in:administracion_publica,obreros',
         ]);
         
-        Remuneracion::create([
-            'nivel_rango_id' => $request->nivel_rango_id,
-            'grupo_cargo_id' => $request->grupo_cargo_id,
-            'tipo_cargo' => $request->tipo_cargo,
-            'valor' => $request->valor,
-            'estado' => $request->has('estado') ? 1 : 0,
-        ]);
+        // Validación específica según el tipo de personal
+        if ($request->tipo_personal === 'administracion_publica') {
+            $request->validate([
+                'nivel_rango_id' => 'required|exists:nivel_rangos,id',
+                'grupo_cargo_id' => 'required|exists:grupo_cargos,id',
+                'tipo_cargo' => 'required|in:bachiller,tecnico_superior,profesional_universitario',
+                'valor' => 'required|numeric|min:0',
+            ]);
+            
+            $data = [
+                'nivel_rango_id' => $request->nivel_rango_id,
+                'grupo_cargo_id' => $request->grupo_cargo_id,
+                'tipo_cargo' => $request->tipo_cargo,
+                'valor' => $request->valor,
+            ];
+        } else { // obreros
+            $request->validate([
+                'clasificacion' => 'required|in:no_calificados,calificados,supervisor',
+                'grado' => 'required|integer|min:1|max:10',
+                'valor' => 'required|numeric|min:0',
+            ]);
+            
+            $data = [
+                'clasificacion' => $request->clasificacion,
+                'grado' => $request->grado,
+                'valor' => $request->valor,
+            ];
+        }
+        
+        // Datos comunes para ambos tipos
+        $data['tipo_personal'] = $request->tipo_personal;
+        $data['estado'] = $request->has('estado') ? 1 : 0;
+        
+        Remuneracion::create($data);
         
         return redirect()->route('remuneraciones.index')
             ->with('success', 'Remuneración creada correctamente.');
@@ -67,12 +99,17 @@ class RemuneracionController extends Controller
         $nivelesRangos = NivelRango::where('estado', 1)->get();
         $gruposCargos = GrupoCargo::where('estado', 1)->get();
         $tiposCargo = [
-            'administrativo' => 'Administrativo',
+            'bachiller' => 'Bachiller',
             'tecnico_superior' => 'Técnico Superior Universitario',
             'profesional_universitario' => 'Profesional Universitario'
         ];
         
-        return view('remuneraciones.edit', compact('remuneracion', 'nivelesRangos', 'gruposCargos', 'tiposCargo'));
+        $tiposPersonal = [
+            'obreros' => 'Obreros',
+            'administracion_publica' => 'Administración Pública'
+        ];
+        
+        return view('remuneraciones.edit', compact('remuneracion', 'nivelesRangos', 'gruposCargos', 'tiposCargo', 'tiposPersonal'));
     }
 
     /**
@@ -80,21 +117,53 @@ class RemuneracionController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // Validación común para todos los tipos de personal
         $request->validate([
-            'nivel_rango_id' => 'required|exists:nivel_rangos,id',
-            'grupo_cargo_id' => 'required|exists:grupo_cargos,id',
-            'tipo_cargo' => 'required|in:administrativo,tecnico_superior,profesional_universitario',
-            'valor' => 'required|numeric|min:0',
+            'tipo_personal' => 'required|in:administracion_publica,obreros',
         ]);
         
+        // Validación específica según el tipo de personal
+        if ($request->tipo_personal === 'administracion_publica') {
+            $request->validate([
+                'nivel_rango_id' => 'required|exists:nivel_rangos,id',
+                'grupo_cargo_id' => 'required|exists:grupo_cargos,id',
+                'tipo_cargo' => 'required|in:bachiller,tecnico_superior,profesional_universitario',
+                'valor' => 'required|numeric|min:0',
+            ]);
+            
+            $data = [
+                'nivel_rango_id' => $request->nivel_rango_id,
+                'grupo_cargo_id' => $request->grupo_cargo_id,
+                'tipo_cargo' => $request->tipo_cargo,
+                'valor' => $request->valor,
+                // Limpiar campos de obreros si cambia de tipo
+                'clasificacion' => null,
+                'grado' => null,
+            ];
+        } else { // obreros
+            $request->validate([
+                'clasificacion' => 'required|in:no_calificados,calificados,supervisor',
+                'grado' => 'required|integer|min:1|max:10',
+                'valor' => 'required|numeric|min:0',
+            ]);
+            
+            $data = [
+                'clasificacion' => $request->clasificacion,
+                'grado' => $request->grado,
+                'valor' => $request->valor,
+                // Limpiar campos de funcionarios si cambia de tipo
+                'nivel_rango_id' => null,
+                'grupo_cargo_id' => null,
+                'tipo_cargo' => null,
+            ];
+        }
+        
+        // Datos comunes para ambos tipos
+        $data['tipo_personal'] = $request->tipo_personal;
+        $data['estado'] = $request->has('estado') ? 1 : 0;
+        
         $remuneracion = Remuneracion::findOrFail($id);
-        $remuneracion->update([
-            'nivel_rango_id' => $request->nivel_rango_id,
-            'grupo_cargo_id' => $request->grupo_cargo_id,
-            'tipo_cargo' => $request->tipo_cargo,
-            'valor' => $request->valor,
-            'estado' => $request->has('estado') ? 1 : 0,
-        ]);
+        $remuneracion->update($data);
         
         return redirect()->route('remuneraciones.index')
             ->with('success', 'Remuneración actualizada correctamente.');
@@ -110,5 +179,56 @@ class RemuneracionController extends Controller
         
         return redirect()->route('remuneraciones.index')
             ->with('success', 'Remuneración eliminada correctamente.');
+    }
+    
+    /**
+     * Show the form for importing remuneraciones.
+     */
+    public function importForm()
+    {
+        return view('remuneraciones.import');
+    }
+    
+    /**
+     * Import remuneraciones from Excel/CSV.
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,xlsx,xls|max:2048',
+        ]);
+        
+        try {
+            Excel::import(new RemuneracionesImport, $request->file('file'));
+            
+            return redirect()->route('remuneraciones.index')
+                ->with('success', 'Remuneraciones importadas correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al importar: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Obtiene la remuneración para un grupo de cargo específico
+     */
+    public function getRemuneracionPorGrupo(string $grupoId)
+    {
+        // Buscar remuneración por grupo de cargo
+        $remuneracion = Remuneracion::where('grupo_cargo_id', $grupoId)
+            ->where('estado', 1)
+            ->first();
+            
+        if ($remuneracion) {
+            return response()->json([
+                'valor' => $remuneracion->valor,
+                'success' => true
+            ], 200);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'No se encontró remuneración para este grupo de cargo'
+        ], 404);
     }
 }

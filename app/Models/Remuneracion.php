@@ -11,7 +11,12 @@ class Remuneracion extends Model
         'grupo_cargo_id',
         'tipo_cargo',
         'valor',
-        'estado'
+        'estado',
+        'tipo_personal',
+        'clasificacion',
+        'grado',
+        'valor_minimo',
+        'valor_maximo'
     ];
 
     /**

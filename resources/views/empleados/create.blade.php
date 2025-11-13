@@ -35,21 +35,7 @@
                 <p class="text-red-500 text-xs italic mt-1 hidden" id="cedula-error"></p>
             </div>
 
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="cargo_id">
-                    Cargo
-                </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('cargo_id') border-red-500 @enderror"
-                    id="cargo_id" name="cargo_id" required>
-                    <option value="">Seleccione un cargo</option>
-                    @foreach($cargos as $cargo)
-                        <option value="{{ $cargo->id }}" {{ old('cargo_id') == $cargo->id ? 'selected' : '' }}>
-                            {{ $cargo->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="cargo-error"></p>
-            </div>
+          
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="departamento_id">
@@ -101,15 +87,6 @@
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="salario">
-                    Salario
-                </label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('salario') border-red-500 @enderror"
-                    id="salario" type="number" name="salario" value="{{ old('salario') }}" step="0.01" min="0" required>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="salario-error"></p>
-            </div>
-
-            <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha_ingreso">
                     Fecha de Ingreso
                 </label>
@@ -118,6 +95,161 @@
                 <p class="text-red-500 text-xs italic mt-1 hidden" id="fecha-ingreso-error"></p>
             </div>
 
+           
+
+            <!-- NUEVOS CAMPOS: HIJOS -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">¿Tiene hijos?</label>
+                <input type="checkbox" id="tiene_hijos" name="tiene_hijos" value="1" {{ old('tiene_hijos') ? 'checked' : '' }}>
+            </div>
+            <div class="mb-4" id="cantidad_hijos_div" style="display: none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="cantidad_hijos">Cantidad de hijos</label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cantidad_hijos" name="cantidad_hijos" type="number" min="1" value="{{ old('cantidad_hijos') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Beneficios personalizados</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    @foreach($deducciones as $beneficio)
+                        @if($beneficio->tipo === 'beneficio')
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="beneficios[]" value="{{ $beneficio->id }}" {{ (is_array(old('beneficios')) && in_array($beneficio->id, old('beneficios', []))) ? 'checked' : '' }}>
+                            <span class="ml-2">{{ $beneficio->nombre }}</span>
+                        </label>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Deducciones tipo Beneficio</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    @foreach($deducciones as $deduccion)
+                        @if($deduccion->tipo === 'deduccion')
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="deducciones[]" value="{{ $deduccion->id }}" {{ (is_array(old('deducciones')) && in_array($deduccion->id, old('deducciones', []))) ? 'checked' : '' }}>
+                            <span class="ml-2">{{ $deduccion->nombre }}</span>
+                        </label>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Deducciones tipo Parámetro</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    @foreach($deducciones as $deduccion)
+                        @if($deduccion->tipo === 'parametro')
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="deducciones[]" value="{{ $deduccion->id }}" {{ (is_array(old('deducciones')) && in_array($deduccion->id, old('deducciones', []))) ? 'checked' : '' }}>
+                            <span class="ml-2">{{ $deduccion->nombre }}</span>
+                        </label>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+
+        
+
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Información de Remuneraciones y Clasificación</h3>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_antiguedad_id">
+                    Antigüedad
+                </label>
+                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('prima_antiguedad_id') border-red-500 @enderror"
+                    id="prima_antiguedad_id" name="prima_antiguedad_id">
+                    <option value="">Antigüedad</option>
+                    @foreach($primasAntiguedad as $prima)
+                        <option value="{{ $prima->id }}" {{ old('prima_antiguedad_id') == $prima->id ? 'selected' : '' }}>
+                            {{ $prima->anios }} años
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-red-500 text-xs italic mt-1 hidden" id="prima-antiguedad-error"></p>
+            </div>
+
+            <!-- La Prima de Profesionalización se asigna automáticamente según el Tipo de Cargo -->
+            <input type="hidden" id="prima_profesionalizacion_id" name="prima_profesionalizacion_id" value="">
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo_personal">Tipo de Personal</label>
+                <select id="tipo_personal" name="tipo_personal" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="">Seleccione tipo de personal</option>
+                    <option value="administracion_publica">Administración Pública</option>
+                    <option value="obreros">Obrero</option>
+                </select>
+            </div>
+            <div class="mb-4" id="nivel_rango_div" style="display:none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="nivel_rango_id">Nivel de Rango</label>
+                <select id="nivel_rango_id" name="nivel_rango_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
+                    <option value="">Seleccione nivel</option>
+                    @foreach($nivelesRangos as $nivel)
+                        <option value="{{ $nivel->id }}" {{ old('nivel_rango_id') == $nivel->id ? 'selected' : '' }}>{{ $nivel->descripcion }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mb-4" id="tipo_cargo_div" style="display:none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo_cargo">Tipo de Cargo</label>
+                <select id="tipo_cargo" name="tipo_cargo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
+                    <option value="">Seleccione tipo de cargo</option>
+                    <option value="bachiller">Bachiller</option>
+                    <option value="tecnico_superior">Técnico Superior Universitario</option>
+                    <option value="profesional_universitario">Profesional Universitario</option>
+                </select>
+                <p class="text-red-500 text-xs italic mt-1 hidden" id="tipo_cargo-error"></p>
+            </div>
+            
+            <div class="mb-4" id="grupo_cargo_div" style="display:none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="grupo_cargo_id">Grupo de Cargo</label>
+                <select id="grupo_cargo_id" name="grupo_cargo_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" {{ empty($gruposCargos) ? 'disabled' : '' }}>
+    <option value="">Seleccione un grupo de cargo</option>
+    @foreach($gruposCargos as $grupo)
+        <option value="{{ $grupo->id }}" {{ old('grupo_cargo_id') == $grupo->id ? 'selected' : '' }}>{{ $grupo->descripcion }}</option>
+    @endforeach
+</select>
+@if(empty($gruposCargos) || $gruposCargos->count() == 0)
+    <p class="text-sm text-gray-500 mt-1">Seleccione primero un tipo de cargo para ver los grupos disponibles.</p>
+@endif
+            </div>
+            <div class="mb-4" id="clasificacion_div" style="display:none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="clasificacion">Clasificación</label>
+                <select id="clasificacion" name="clasificacion" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
+                    <option value="">Seleccione clasificación</option>
+                    <option value="no_calificados">No Calificado</option>
+                    <option value="calificados">Calificado</option>
+                    <option value="supervisor">Supervisor</option>
+                </select>
+            </div>
+            <div class="mb-4" id="grado_div" style="display:none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="grado">Grado</label>
+                <select id="grado" name="grado" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
+                    <option value="">Seleccione grado</option>
+                    @for($i = 1; $i <= 10; $i++)
+                        <option value="{{ $i }}">{{ $i }}</option>
+                    @endfor
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="cargo_id">
+                    Cargo
+                </label>
+                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('cargo_id') border-red-500 @enderror"
+                    id="cargo_id" name="cargo_id" required>
+                    <option value="">Seleccione un cargo</option>
+                    @foreach($cargos as $cargo)
+                        <option value="{{ $cargo->id }}" {{ old('cargo_id') == $cargo->id ? 'selected' : '' }}>
+                            {{ $cargo->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-red-500 text-xs italic mt-1 hidden" id="cargo-error"></p>
+            </div>
+            <!-- CAMPO DE SALARIO SOLO LECTURA -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="salario">Salario</label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-100" id="salario" type="number" name="salario" value="{{ old('salario') }}" step="0.01" min="0" readonly>
+                <p class="text-red-500 text-xs italic mt-1 hidden" id="salario-error"></p>
+            </div>
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="observaciones">
                     Observaciones
@@ -125,89 +257,6 @@
                 <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('observaciones') border-red-500 @enderror"
                     id="observaciones" name="observaciones" rows="3">{{ old('observaciones') }}</textarea>
             </div>
-
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">Información de Remuneraciones y Clasificación</h3>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_antiguedad_id">
-                    Prima de Antigüedad
-                </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('prima_antiguedad_id') border-red-500 @enderror"
-                    id="prima_antiguedad_id" name="prima_antiguedad_id">
-                    <option value="">Seleccione una prima de antigüedad</option>
-                    @foreach($primasAntiguedad as $prima)
-                        <option value="{{ $prima->id }}" {{ old('prima_antiguedad_id') == $prima->id ? 'selected' : '' }}>
-                            {{ $prima->nombre }} - {{ $prima->porcentaje }}%
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="prima-antiguedad-error"></p>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_profesionalizacion_id">
-                    Prima de Profesionalización
-                </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('prima_profesionalizacion_id') border-red-500 @enderror"
-                    id="prima_profesionalizacion_id" name="prima_profesionalizacion_id">
-                    <option value="">Seleccione una prima de profesionalización</option>
-                    @foreach($primasProfesionalizacion as $prima)
-                        <option value="{{ $prima->id }}" {{ old('prima_profesionalizacion_id') == $prima->id ? 'selected' : '' }}>
-                            {{ $prima->nombre }} - {{ $prima->porcentaje }}%
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="prima-profesionalizacion-error"></p>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="nivel_rango_id">
-                    Nivel de Rango
-                </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('nivel_rango_id') border-red-500 @enderror"
-                    id="nivel_rango_id" name="nivel_rango_id">
-                    <option value="">Seleccione un nivel de rango</option>
-                    @foreach($nivelesRangos as $nivel)
-                        <option value="{{ $nivel->id }}" {{ old('nivel_rango_id') == $nivel->id ? 'selected' : '' }}>
-                            {{ $nivel->nombre }} - {{ $nivel->descripcion }}
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="nivel-rango-error"></p>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="grupo_cargo_id">
-                    Grupo o Clase de Cargo
-                </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('grupo_cargo_id') border-red-500 @enderror"
-                    id="grupo_cargo_id" name="grupo_cargo_id">
-                    <option value="">Seleccione un grupo de cargo</option>
-                    @foreach($gruposCargos as $grupo)
-                        <option value="{{ $grupo->id }}" {{ old('grupo_cargo_id') == $grupo->id ? 'selected' : '' }}>
-                            {{ $grupo->nombre }} - {{ $grupo->descripcion }}
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="grupo-cargo-error"></p>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo_cargo">
-                    Tipo de Cargo
-                </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('tipo_cargo') border-red-500 @enderror"
-                    id="tipo_cargo" name="tipo_cargo">
-                    <option value="">Seleccione un tipo de cargo</option>
-                    @foreach($tiposCargo as $value => $label)
-                        <option value="{{ $value }}" {{ old('tipo_cargo') == $value ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="tipo-cargo-error"></p>
-            </div>
-
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
                     Crear Empleado
@@ -220,106 +269,138 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('createEmpleadoForm');
-    const requiredFields = {
-        cedula: {
-            element: document.getElementById('cedula'),
-            error: document.getElementById('cedula-error'),
-            message: 'Debe seleccionar un usuario'
-        },
-        cargo_id: {
-            element: document.getElementById('cargo_id'),
-            error: document.getElementById('cargo-error'),
-            message: 'Debe seleccionar un cargo'
-        },
-        departamento_id: {
-            element: document.getElementById('departamento_id'),
-            error: document.getElementById('departamento-error'),
-            message: 'Debe seleccionar un departamento'
-        },
-        horario_id: {
-            element: document.getElementById('horario_id'),
-            error: document.getElementById('horario-error'),
-            message: 'Debe seleccionar un horario'
-        },
-        estado_id: {
-            element: document.getElementById('estado_id'),
-            error: document.getElementById('estado-error'),
-            message: 'Debe seleccionar un estado'
-        },
-        salario: {
-            element: document.getElementById('salario'),
-            error: document.getElementById('salario-error'),
-            message: 'Debe ingresar un salario válido',
-            validate: (value) => !isNaN(value) && parseFloat(value) > 0
-        },
-        fecha_ingreso: {
-            element: document.getElementById('fecha_ingreso'),
-            error: document.getElementById('fecha-ingreso-error'),
-            message: 'Debe seleccionar una fecha de ingreso',
-            validate: (value) => value !== ''
-        }
-    };
+            <!-- NUEVOS SELECTS DINÁMICOS PARA REMUNERACIÓN -->
 
-    // Real-time validation
-    Object.keys(requiredFields).forEach(key => {
-        const field = requiredFields[key];
-        
-        field.element.addEventListener('change', function() {
-            validateField(key);
-        });
-
-        field.element.addEventListener('blur', function() {
-            validateField(key);
-        });
-    });
-
-    function validateField(fieldName) {
-        const field = requiredFields[fieldName];
-        const value = field.element.value.trim();
-        
-        if (value === '') {
-            showError(field, field.message);
-            return false;
-        }
-
-        if (field.validate && !field.validate(value)) {
-            showError(field, field.message);
-            return false;
-        }
-
-        hideError(field);
-        return true;
+<!-- SCRIPT DINÁMICO PARA OBTENER SUELDO -->
+<script> 
+function mostrarOcultarCampos() {
+    const tipo = document.getElementById('tipo_personal').value;
+    document.getElementById('nivel_rango_div').style.display = tipo === 'administracion_publica' ? '' : 'none';
+    document.getElementById('tipo_cargo_div').style.display = tipo === 'administracion_publica' ? '' : 'none';
+    document.getElementById('grupo_cargo_div').style.display = tipo === 'administracion_publica' ? '' : 'none';
+    document.getElementById('clasificacion_div').style.display = tipo === 'obreros' ? '' : 'none';
+    document.getElementById('grado_div').style.display = tipo === 'obreros' ? '' : 'none';
+    
+    // Limpiar el select de grupo_cargo y el campo salario al cambiar el tipo
+    if (tipo === 'administracion_publica') {
+        document.getElementById('grupo_cargo_id').innerHTML = '<option value="">Seleccione un grupo</option>';
+        document.getElementById('salario').value = '';
     }
+}
 
-    function showError(field, message) {
-        field.element.classList.add('border-red-500');
-        field.error.textContent = message;
-        field.error.classList.remove('hidden');
+// Filtrar grupos de cargo según el tipo seleccionado
+function filtrarGruposPorTipo() {
+    const tipoCargo = document.getElementById('tipo_cargo').value;
+    const grupoCargoSelect = document.getElementById('grupo_cargo_id');
+    
+    // Limpiar el select de grupo de cargo y el campo salario
+    grupoCargoSelect.innerHTML = '<option value="">Seleccione un grupo</option>';
+    document.getElementById('salario').value = '';
+    
+    // Si no hay tipo de cargo seleccionado, terminamos
+    if (!tipoCargo) {
+        grupoCargoSelect.disabled = true;
+        return;
     }
-
-    function hideError(field) {
-        field.element.classList.remove('border-red-500');
-        field.error.classList.add('hidden');
-    }
-
-    // Form submission
-    form.addEventListener('submit', function(e) {
-        let isValid = true;
-
-        // Validate all fields
-        Object.keys(requiredFields).forEach(key => {
-            if (!validateField(key)) {
-                isValid = false;
+    
+    grupoCargoSelect.disabled = true; // Deshabilitar mientras carga
+    
+    // Realizar una solicitud AJAX para obtener los grupos según el tipo
+    fetch(`/grupos-por-tipo/${tipoCargo}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener grupos: ' + response.status);
             }
+            return response.json();
+        })
+        .then(grupos => {
+            // Habilitar el select
+            grupoCargoSelect.disabled = false;
+            
+            // Si no hay grupos, terminamos
+            if (grupos.length === 0) {
+                return;
+            }
+            
+            // Agregar las opciones al select
+            grupos.forEach(grupo => {
+                const option = document.createElement('option');
+                option.value = grupo.id;
+                option.textContent = grupo.descripcion;
+                grupoCargoSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            grupoCargoSelect.disabled = false;
         });
+}
 
-        if (!isValid) {
-            e.preventDefault();
+// Obtener el salario según el grupo de cargo seleccionado
+function obtenerSalarioPorGrupo() {
+    const grupoId = document.getElementById('grupo_cargo_id').value;
+    const salarioInput = document.getElementById('salario');
+    
+    // Limpiar el campo salario
+    salarioInput.value = '';
+    
+    // Si no hay grupo seleccionado, terminamos
+    if (!grupoId) {
+        return;
+    }
+    
+    // Realizar una solicitud AJAX para obtener el salario
+    fetch(`/remuneracion-por-grupo/${grupoId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener salario: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.valor) {
+                salarioInput.value = data.valor;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Configurar los event listeners cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar/ocultar campos según el tipo de personal inicial
+    mostrarOcultarCampos();
+    
+    // Event listener para tipo_personal
+    document.getElementById('tipo_personal').addEventListener('change', mostrarOcultarCampos);
+    
+    // Event listener para tipo_cargo
+    document.getElementById('tipo_cargo').addEventListener('change', filtrarGruposPorTipo);
+    
+    // Event listener para grupo_cargo_id
+    document.getElementById('grupo_cargo_id').addEventListener('change', obtenerSalarioPorGrupo);
+    
+    // Event listener para cantidad de hijos
+    const tieneHijos = document.getElementById('tiene_hijos');
+    const cantidadHijosDiv = document.getElementById('cantidad_hijos_div');
+    const cantidadHijosInput = document.getElementById('cantidad_hijos');
+    
+    function mostrarCantidadHijos() {
+        if (tieneHijos.checked) {
+            cantidadHijosDiv.style.display = '';
+            cantidadHijosInput.required = true;
+        } else {
+            cantidadHijosDiv.style.display = 'none';
+            cantidadHijosInput.value = '';
+            cantidadHijosInput.required = false;
         }
-    });
+    }
+    
+    tieneHijos.addEventListener('change', mostrarCantidadHijos);
+    mostrarCantidadHijos();
 });
 </script>
+
+
 @endsection

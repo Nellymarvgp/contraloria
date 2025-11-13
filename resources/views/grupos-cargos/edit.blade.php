@@ -23,6 +23,18 @@
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
+            <div class="mb-4">
+                <label for="categoria" class="block text-gray-700 font-medium mb-2">Categoría</label>
+                <select name="categoria" id="categoria" class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('categoria') border-red-500 @enderror">
+                    <option value="">Seleccione una categoría</option>
+                    @foreach($categorias as $key => $label)
+                        <option value="{{ $key }}" {{ old('categoria', $grupo->categoria) == $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('categoria')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
             
             <div class="mb-4">
                 <label class="flex items-center">

@@ -6,6 +6,11 @@
     <title>Sistema de Nómina - @yield('title', 'Dashboard')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="{{ asset('css/datatables-custom.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 </head>
 <body class="bg-gray-100">
     <div class="min-h-screen flex flex-col md:flex-row" x-data="{ sidebarOpen: false, adminOpen: false }">
@@ -64,18 +69,45 @@
                         <a href="{{ route('remuneraciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('remuneraciones.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-money-bill-alt mr-2"></i> Remuneraciones
                         </a>
+                        
                     </div>
                 </div>
                 <a href="{{ route('empleados.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('empleados.*') ? 'bg-gray-700' : '' }}">
                     <i class="fas fa-user-tie mr-2"></i> Empleados
                 </a>
-                <a href="#" class="block px-4 py-2 hover:bg-gray-700">
+                 <!-- Configuración de Nómina Dropdown -->
+                 <div class="relative" x-data="{ configOpen: false }">
+                    <button @click="configOpen = !configOpen" class="w-full flex items-center px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('deducciones.*') ? 'bg-gray-700' : '' }}">
+                        <i class="fas fa-cog mr-2"></i>
+                        <span>Configuración de Nómina</span>
+                        <i class="fas fa-chevron-down ml-auto" :class="{'transform rotate-180': configOpen}"></i>
+                    </button>
+                    <div x-show="configOpen" class="pl-4">
+                        <a href="{{ route('deducciones.index', ['tipo' => 'deduccion']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'deduccion') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-minus-circle mr-2"></i> Deducciones
+                        </a>
+                        <a href="{{ route('deducciones.index', ['tipo' => 'beneficio']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'beneficio') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-plus-circle mr-2"></i> Beneficios
+                        </a>
+                        <a href="{{ route('deducciones.index', ['tipo' => 'parametro']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'parametro') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-sliders-h mr-2"></i> Parámetros
+                        </a>
+                    </div>
+                </div>
+                <a href="{{ route('nominas.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('nominas.*') ? 'bg-gray-700' : '' }}">
                     <i class="fas fa-money-bill-wave mr-2"></i> Nómina
                 </a>
+                
+               
                 <a href="#" class="block px-4 py-2 hover:bg-gray-700">
                     <i class="fas fa-chart-bar mr-2"></i> Reportes
                 </a>
                 @endif
+                
+                <!-- Vacaciones (disponible para todos) -->
+                <a href="{{ route('vacaciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('vacaciones.*') ? 'bg-gray-700' : '' }}">
+                    <i class="fas fa-umbrella-beach mr-2"></i> Vacaciones
+                </a>
             </nav>
         </div>
 
@@ -132,5 +164,20 @@
         </div>
     </div>
     <script src="//unpkg.com/alpinejs" defer></script>
+    
+    <!-- jQuery (requerido por DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    
+    @stack('scripts')
+    @stack('datatable-scripts')
 </body>
 </html>

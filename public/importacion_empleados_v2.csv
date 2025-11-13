@@ -1,0 +1,6 @@
+cedula,nombre,apellido,email,role_id,cargo_id,departamento_id,horario_id,estado_id,salario,fecha_ingreso,prima_antiguedad_id,prima_profesionalizacion_id,nivel_rango,grupo_cargo,tipo_cargo,tiene_hijos,cantidad_hijos,observaciones
+12345678,Juan,Pérez,juan.perez@example.com,2,1,1,1,1,1800.50,2024-01-15,1,1,Nivel 1,Grupo A,administrativo,1,2,Empleado con experiencia en gestión administrativa
+23456789,María,González,maria.gonzalez@example.com,2,2,2,1,1,2200.75,2023-06-20,2,2,Nivel 2,Grupo B,profesional_universitario,0,0,Profesional con maestría en administración
+34567890,Carlos,Rodríguez,carlos.rodriguez@example.com,2,3,3,2,1,1650.25,2024-03-10,1,3,Nivel 1,Grupo A,tecnico_superior,1,1,Técnico especializado en sistemas
+45678901,Ana,Martínez,ana.martinez@example.com,2,2,1,1,1,2100.00,2022-11-05,3,2,Nivel 3,Grupo C,profesional_universitario,0,0,Profesional con 10 años de experiencia
+56789012,Pedro,López,pedro.lopez@example.com,2,4,2,2,1,1750.50,2024-02-28,2,1,Nivel 2,Grupo B,administrativo,1,3,Administrativo con conocimientos en contabilidad

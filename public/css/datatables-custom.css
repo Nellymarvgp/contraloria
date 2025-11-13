@@ -1,0 +1,134 @@
+/* Estilos modernos y sencillos para DataTables */
+
+/* Tabla general */
+table.dataTable {
+    border-radius: 10px;
+    overflow: hidden;
+    border: none;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.bg-white.shadow-md.rounded.my-6.overflow-x-auto {
+    padding: 30px;
+}
+
+table.dataTable thead {
+    background: linear-gradient(90deg, #f8fafc 60%, #e0e7ef 100%);
+}
+
+table.dataTable thead th {
+    color: #334155;
+    font-weight: 600;
+    border-bottom: 2px solid #e5e7eb;
+    background: none;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+table.dataTable tbody tr {
+    transition: background 0.2s;
+}
+
+table.dataTable tbody tr:nth-child(even) {
+    background: #f3f4f6;
+}
+
+table.dataTable tbody tr:hover {
+    background: #e0e7ef;
+}
+
+table.dataTable td {
+    border: none;
+    color: #475569;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+/* Paginación */
+.dataTables_paginate .paginate_button {
+    border: none;
+    background: #f1f5f9;
+    color: #334155;
+    border-radius: 6px;
+    margin: 0 2px;
+    padding: 6px 14px;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+}
+
+.dataTables_paginate .paginate_button.current,
+.dataTables_paginate .paginate_button:hover {
+    background: #2563eb;
+    color: #fff !important;
+}
+
+/* Filtro de búsqueda */
+.dataTables_filter input[type="search"] {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    outline: none;
+    background: #f8fafc;
+    transition: border 0.2s;
+}
+.dataTables_filter input[type="search"]:focus {
+    border-color: #2563eb;
+}
+
+/* Info */
+.dataTables_info {
+    color: #64748b;
+    font-size: 0.97rem;
+    margin-top: 0.5rem;
+}
+
+/* Botones de exportación */
+.dt-buttons .btn-export,
+.dt-buttons .dt-button {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 18px;
+    font-weight: 500;
+    margin-right: 8px;
+    box-shadow: 0 1px 2px rgba(37,99,235,0.08);
+    transition: background 0.2s, color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.dt-buttons .btn-export:hover,
+.dt-buttons .dt-button:hover {
+    background: #1d4ed8;
+    color: #fff;
+}
+
+/* Responsive icon */
+table.dataTable.dtr-inline.collapsed>tbody>tr>td:first-child:before,
+table.dataTable.dtr-inline.collapsed>tbody>tr>th:first-child:before {
+    background-color: #2563eb;
+    color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(37,99,235,0.08);
+}
+
+/* Ajuste de scroll en responsive */
+div.dataTables_wrapper div.dataTables_scrollBody {
+    background: #fff;
+    border-radius: 0 0 10px 10px;
+}
+
+/* Ajuste para los selects de longitud */
+.dataTables_length select {
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    padding: 4px 12px;
+    background: #f8fafc;
+    margin-left: 4px;
+}
+
+/* Ajuste para tablas sin bordes dobles */
+table.dataTable.no-footer {
+    border-bottom: none;
+}
