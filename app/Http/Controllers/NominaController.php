@@ -114,8 +114,8 @@ class NominaController extends Controller
             $totalMonto = 0;
             
             foreach ($empleados as $empleado) {
-                // Calculate payroll for employee
-                $calculationResult = $this->nominaCalculator->calculate($empleado);
+                // Calculate payroll for employee (pass Nomina for date-conditional concepts)
+                $calculationResult = $this->nominaCalculator->calculate($empleado, $nomina);
                 
                 // Create payroll detail
                 $detalle = NominaDetalle::create([
@@ -240,6 +240,12 @@ class NominaController extends Controller
             ];
         }
         $pdf = Pdf::loadView('nominas.recibo', compact('recibos'))->setPaper('A4');
-        return $pdf->download('recibos_nomina_' . $nomina->id . '.pdf');
+        $content = $pdf->output();
+        $filename = 'recibos_nomina_' . $nomina->id . '.pdf';
+        return response($content, 200, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

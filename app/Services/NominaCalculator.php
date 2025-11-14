@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Empleado;
+use App\Models\Nomina;
 use App\Models\Remuneracion;
 use App\Models\PrimaAntiguedad;
 use App\Models\PrimaProfesionalizacion;
@@ -17,14 +18,14 @@ class NominaCalculator
      * @param Empleado $empleado
      * @return array
      */
-    public function calculate(Empleado $empleado)
+    public function calculate(Empleado $empleado, Nomina $nomina)
     {
         // Base calculations
         $sueldoBasico = $this->calcularSueldoBasico($empleado);
         $primaProfesionalizacion = $this->calcularPrimaProfesionalizacion($empleado, $sueldoBasico);
         $primaAntiguedad = $this->calcularPrimaAntiguedad($empleado, $sueldoBasico);
         $primaPorHijo = $this->calcularPrimaPorHijo($empleado);
-        $comida = $this->calcularComida();
+        $comida = $this->calcularComida($nomina);
         $otrasPrimas = $this->calcularOtrasPrimas($empleado);
         
         // Retenciones (deductions)
@@ -110,7 +111,8 @@ class NominaCalculator
                 $ordinaria,
                 $incentivo,
                 $feriado,
-                $gastosRepresentacion
+                $gastosRepresentacion,
+                $empleado
             )
         ];
     }
@@ -208,11 +210,16 @@ class NominaCalculator
      *
      * @return float
      */
-    protected function calcularComida()
+    protected function calcularComida(Nomina $nomina)
     {
-        // Get food allowance from unified configuration
-        $beneficio = Deduccion::findActiveBenefit('comida');
-        return $beneficio ? $beneficio->getValor() : 24.00; // Valor por defecto
+        // Only include if the receipt/payroll period date meets the rule: day > 5 and < 11
+        // We use the period end date (fecha_fin) as the reference date for the receipt
+        $dia = $nomina->fecha_fin ? (int) $nomina->fecha_fin->day : null;
+        if ($dia !== null && $dia > 5 && $dia < 11) {
+            $beneficio = Deduccion::findActiveBenefit('comida');
+            return $beneficio ? $beneficio->getValor() : 24.00; // Valor por defecto
+        }
+        return 0.00;
     }
     
     /**
@@ -599,7 +606,8 @@ class NominaCalculator
         $ordinaria,
         $incentivo,
         $feriado,
-        $gastosRepresentacion
+        $gastosRepresentacion,
+        Empleado $empleado
     ) {
         $conceptos = [];
         
@@ -745,28 +753,66 @@ class NominaCalculator
             ];
         }
         
-        // Add dynamic deductions from the database
-        $deducciones = Deduccion::where('activo', true)->get();
-        foreach ($deducciones as $deduccion) {
+        // Add employee-specific benefits and deductions, avoid duplicates
+        $existentes = [];
+        foreach ($conceptos as $c) {
+            $existentes[$c['tipo'].'|'.$c['descripcion']] = true;
+        }
+
+        // Beneficios (asignaciones) asignados al empleado
+        $beneficiosEmpleado = $empleado->beneficios()->where('activo', true)->get();
+        foreach ($beneficiosEmpleado as $beneficio) {
             $monto = 0;
-            
-            if ($deduccion->es_fijo) {
-                $monto = $deduccion->monto_fijo;
+            if (!is_null($beneficio->pivot->valor_extra)) {
+                $monto = (float) $beneficio->pivot->valor_extra;
+            } elseif ($beneficio->es_fijo) {
+                $monto = (float) $beneficio->monto_fijo;
             } else {
-                $monto = round($sueldoBasico * ($deduccion->porcentaje / 100), 2);
+                $monto = round($sueldoBasico * ($beneficio->porcentaje / 100), 2);
             }
-            
+
             if ($monto > 0) {
-                $conceptos[] = [
-                    'tipo' => 'deduccion',
-                    'descripcion' => $deduccion->nombre,
-                    'monto' => $monto,
-                    'porcentaje' => $deduccion->es_fijo ? null : $deduccion->porcentaje,
-                    'es_fijo' => $deduccion->es_fijo
-                ];
+                $clave = 'asignacion|'.$beneficio->nombre;
+                if (!isset($existentes[$clave])) {
+                    $conceptos[] = [
+                        'tipo' => 'asignacion',
+                        'descripcion' => $beneficio->nombre,
+                        'monto' => $monto,
+                        'porcentaje' => $beneficio->es_fijo ? null : $beneficio->porcentaje,
+                        'es_fijo' => $beneficio->es_fijo
+                    ];
+                    $existentes[$clave] = true;
+                }
             }
         }
-        
+
+        // Deducciones asignadas al empleado
+        $deduccionesEmpleado = $empleado->deducciones()->where('activo', true)->get();
+        foreach ($deduccionesEmpleado as $ded) {
+            $monto = 0;
+            if (!is_null($ded->pivot->valor_extra)) {
+                $monto = (float) $ded->pivot->valor_extra;
+            } elseif ($ded->es_fijo) {
+                $monto = (float) $ded->monto_fijo;
+            } else {
+                $monto = round($sueldoBasico * ($ded->porcentaje / 100), 2);
+            }
+
+            if ($monto > 0) {
+                $clave = 'deduccion|'.$ded->nombre;
+                if (!isset($existentes[$clave])) {
+                    $conceptos[] = [
+                        'tipo' => 'deduccion',
+                        'descripcion' => $ded->nombre,
+                        'monto' => $monto,
+                        'porcentaje' => $ded->es_fijo ? null : $ded->porcentaje,
+                        'es_fijo' => $ded->es_fijo
+                    ];
+                    $existentes[$clave] = true;
+                }
+            }
+        }
+
         return $conceptos;
     }
 }

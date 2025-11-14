@@ -221,7 +221,7 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($nomina->detalles as $index => $detalle)
                                     <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100 cursor-pointer" onclick="openModal({{ $detalle->id }})">
-                                        <td class="px-3 py-2 text-sm text-gray-900 border">{{ $detalle->empleado->user->name ?? 'N/A' }}</td>
+                                        <td class="px-3 py-2 text-sm text-gray-900 border">{{ $detalle->empleado->user->nombre ?? 'N/A' }} {{ $detalle->empleado->user->apellido ?? 'N/A' }}</td>
                                         <td class="px-3 py-2 text-sm text-gray-900 text-center border">{{ $detalle->empleado->cedula }}</td>
                                         <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->sueldo_basico, 2, '.', ',') }}</td>
                                         <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->prima_profesionalizacion, 2, '.', ',') }}</td>
