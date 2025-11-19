@@ -15,6 +15,7 @@ use App\Models\GrupoCargo;
 use Illuminate\Http\Request;
 use App\Imports\EmpleadosImport;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class EmpleadoController extends Controller
 {
@@ -94,6 +95,19 @@ class EmpleadoController extends Controller
         if(!$data['tiene_hijos']) {
             $data['cantidad_hijos'] = null;
         }
+        // Calcular tiempo de antigüedad en años basado en la fecha de ingreso
+        if (!empty($data['fecha_ingreso'])) {
+            $fechaIngreso = Carbon::parse($data['fecha_ingreso']);
+            $tiempoAntiguedad = $fechaIngreso->diffInYears(Carbon::now());
+            $data['tiempo_antiguedad'] = $tiempoAntiguedad;
+
+            // Asignar automáticamente la prima de antigüedad correspondiente
+            $prima = PrimaAntiguedad::where('estado', 1)
+                ->where('anios', '<=', $tiempoAntiguedad)
+                ->orderByDesc('anios')
+                ->first();
+            $data['prima_antiguedad_id'] = $prima ? $prima->id : null;
+        }
         $empleado = Empleado::create($data);
 
         // Asociar beneficios
@@ -161,6 +175,19 @@ class EmpleadoController extends Controller
         $data['tiene_hijos'] = $request->has('tiene_hijos') ? 1 : 0;
         if(!$data['tiene_hijos']) {
             $data['cantidad_hijos'] = null;
+        }
+        // Calcular tiempo de antigüedad en años basado en la fecha de ingreso
+        if (!empty($data['fecha_ingreso'])) {
+            $fechaIngreso = Carbon::parse($data['fecha_ingreso']);
+            $tiempoAntiguedad = $fechaIngreso->diffInYears(Carbon::now());
+            $data['tiempo_antiguedad'] = $tiempoAntiguedad;
+
+            // Asignar automáticamente la prima de antigüedad correspondiente
+            $prima = PrimaAntiguedad::where('estado', 1)
+                ->where('anios', '<=', $tiempoAntiguedad)
+                ->orderByDesc('anios')
+                ->first();
+            $data['prima_antiguedad_id'] = $prima ? $prima->id : null;
         }
         $empleado->update($data);
 

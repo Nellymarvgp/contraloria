@@ -24,7 +24,7 @@
         <!-- Sidebar -->
         <div :class="{'hidden': !sidebarOpen}" class="md:block bg-gray-800 text-white w-full md:w-64 py-4 flex-shrink-0">
             <div class="px-4">
-                <h1 class="text-2xl font-bold mb-8">SisNómina</h1>
+                <h1 class="text-2xl font-bold mb-8">SITNO</h1>
             </div>
             <nav class="mt-4">
                 <a href="{{ route('dashboard') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('dashboard') ? 'bg-gray-700' : '' }}">

@@ -14,6 +14,7 @@ class Empleado extends Model
         'estado_id',
         'salario',
         'fecha_ingreso',
+        'tiempo_antiguedad',
         'observaciones',
         'prima_antiguedad_id',
         'prima_profesionalizacion_id',

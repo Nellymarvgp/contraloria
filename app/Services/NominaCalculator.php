@@ -215,7 +215,7 @@ class NominaCalculator
         // Only include if the receipt/payroll period date meets the rule: day > 5 and < 11
         // We use the period end date (fecha_fin) as the reference date for the receipt
         $dia = $nomina->fecha_fin ? (int) $nomina->fecha_fin->day : null;
-        if ($dia !== null && $dia > 5 && $dia < 11) {
+        if ($dia !== null && $dia >= 5 && $dia <= 11) {
             $beneficio = Deduccion::findActiveBenefit('comida');
             return $beneficio ? $beneficio->getValor() : 24.00; // Valor por defecto
         }

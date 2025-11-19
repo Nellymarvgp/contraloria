@@ -201,12 +201,14 @@ class NominaController extends Controller
      */
     public function exportPdf(Nomina $nomina)
     {
-        $nomina->load('detalles.empleado.cargo', 'detalles.empleado.departamento', 'detalles.conceptos');
-        
-        // Implementation of PDF generation using a library like DomPDF would go here
-        // For now, just redirect back with a message
-        return redirect()->route('nominas.show', $nomina)
-            ->with('info', 'Funcionalidad de exportación a PDF en desarrollo.');
+        $nomina->load('detalles.empleado.user', 'detalles.empleado.cargo', 'detalles.empleado.departamento');
+
+        $pdf = Pdf::loadView('nominas.ordinaria_pdf', compact('nomina'))
+            ->setPaper('A4', 'landscape');
+
+        $filename = 'nomina_ordinaria_' . $nomina->id . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     /**

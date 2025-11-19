@@ -95,7 +95,13 @@
                 <p class="text-red-500 text-xs italic mt-1 hidden" id="fecha-ingreso-error"></p>
             </div>
 
-           
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="anios_antiguedad">
+                    Años de Antigüedad
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-100" id="anios_antiguedad" type="number" name="anios_antiguedad" value="{{ old('anios_antiguedad') }}" readonly>
+            </div>
+
 
             <!-- NUEVOS CAMPOS: HIJOS -->
             <div class="mb-4">
@@ -150,22 +156,6 @@
         
 
             <h3 class="text-lg font-semibold text-gray-700 mb-4">Información de Remuneraciones y Clasificación</h3>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_antiguedad_id">
-                    Antigüedad
-                </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('prima_antiguedad_id') border-red-500 @enderror"
-                    id="prima_antiguedad_id" name="prima_antiguedad_id">
-                    <option value="">Antigüedad</option>
-                    @foreach($primasAntiguedad as $prima)
-                        <option value="{{ $prima->id }}" {{ old('prima_antiguedad_id') == $prima->id ? 'selected' : '' }}>
-                            {{ $prima->anios }} años
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="prima-antiguedad-error"></p>
-            </div>
 
             <!-- La Prima de Profesionalización se asigna automáticamente según el Tipo de Cargo -->
             <input type="hidden" id="prima_profesionalizacion_id" name="prima_profesionalizacion_id" value="">
@@ -403,6 +393,45 @@ function obtenerSalarioObrero() {
         });
 }
 
+// Calcular años de antigüedad a partir de la fecha de ingreso
+function calcularAntiguedad() {
+    const fechaIngresoInput = document.getElementById('fecha_ingreso');
+    const antiguedadInput = document.getElementById('anios_antiguedad');
+
+    if (!fechaIngresoInput || !antiguedadInput) return;
+
+    const valor = fechaIngresoInput.value;
+    if (!valor) {
+        antiguedadInput.value = '';
+        return;
+    }
+
+    const hoy = new Date();
+    const fechaIngreso = new Date(valor);
+
+    if (isNaN(fechaIngreso.getTime())) {
+        antiguedadInput.value = '';
+        return;
+    }
+
+    let anios = hoy.getFullYear() - fechaIngreso.getFullYear();
+    const mesActual = hoy.getMonth();
+    const diaActual = hoy.getDate();
+    const mesIngreso = fechaIngreso.getMonth();
+    const diaIngreso = fechaIngreso.getDate();
+
+    if (mesActual < mesIngreso || (mesActual === mesIngreso && diaActual < diaIngreso)) {
+        anios--;
+    }
+
+    if (anios < 0) {
+        antiguedadInput.value = '';
+        return;
+    }
+
+    antiguedadInput.value = anios;
+}
+
 // Configurar los event listeners cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     // Mostrar/ocultar campos según el tipo de personal inicial
@@ -439,6 +468,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     tieneHijos.addEventListener('change', mostrarCantidadHijos);
     mostrarCantidadHijos();
+
+    // Calcular la antigüedad inicial y al cambiar la fecha de ingreso
+    const fechaIngresoInput = document.getElementById('fecha_ingreso');
+    if (fechaIngresoInput) {
+        calcularAntiguedad();
+        fechaIngresoInput.addEventListener('change', calcularAntiguedad);
+    }
 });
 </script>
 
