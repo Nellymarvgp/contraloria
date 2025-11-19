@@ -12,6 +12,7 @@ use App\Models\PrimaAntiguedad;
 use App\Models\PrimaProfesionalizacion;
 use App\Models\NivelRango;
 use App\Models\GrupoCargo;
+use App\Models\VacacionesPorDisfrute;
 use Illuminate\Http\Request;
 use App\Imports\EmpleadosImport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -28,7 +29,19 @@ class EmpleadoController extends Controller
     public function index()
     {
         $empleados = Empleado::with(['user', 'cargo', 'departamento', 'horario', 'estado'])->paginate(10);
-        return view('empleados.index', compact('empleados'));
+
+        // Detectar si existen empleados con antigüedad pendiente de actualizar
+        $pendientes = $this->getEmpleadosConAntiguedadPendiente();
+        $tienePendientes = $pendientes->isNotEmpty();
+
+        return view('empleados.index', compact('empleados', 'tienePendientes'));
+    }
+
+    // Listar empleados con año de servicio cumplido pero antigüedad sin actualizar
+    public function antiguedadPendiente()
+    {
+        $pendientes = $this->getEmpleadosConAntiguedadPendiente();
+        return view('empleados.antiguedad_pendiente', compact('pendientes'));
     }
 
     public function create(Request $request)
@@ -238,5 +251,80 @@ class EmpleadoController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al importar: ' . $e->getMessage());
         }
+    }
+
+    // Actualizar antigüedad, prima de antigüedad y registrar días por disfrute para un empleado
+    public function actualizarAntiguedad(Empleado $empleado)
+    {
+        if (!$empleado->fecha_ingreso) {
+            return redirect()->back()->with('error', 'El empleado no tiene fecha de ingreso registrada.');
+        }
+
+        $hoy = Carbon::now();
+        $fechaIngreso = Carbon::parse($empleado->fecha_ingreso);
+        $aniosReales = $fechaIngreso->diffInYears($hoy);
+
+        if ($aniosReales <= 0) {
+            return redirect()->back()->with('error', 'El empleado aún no cumple un año de servicio.');
+        }
+
+        $registrado = $empleado->tiempo_antiguedad ?? 0;
+        if ($aniosReales <= $registrado) {
+            return redirect()->back()->with('error', 'La antigüedad del empleado ya está actualizada.');
+        }
+
+        // Actualizar tiempo de antigüedad y prima de antigüedad
+        $empleado->tiempo_antiguedad = $aniosReales;
+        $prima = PrimaAntiguedad::where('estado', 1)
+            ->where('anios', '<=', $aniosReales)
+            ->orderByDesc('anios')
+            ->first();
+        $empleado->prima_antiguedad_id = $prima ? $prima->id : null;
+        $empleado->save();
+
+        // Calcular días por disfrute según los años de servicio
+        if ($aniosReales >= 1 && $aniosReales <= 5) {
+            $diasPorDisfrute = 15;
+        } elseif ($aniosReales > 5) {
+            $diasPorDisfrute = ($aniosReales - 5) + 15;
+        } else {
+            $diasPorDisfrute = 0;
+        }
+
+        if ($diasPorDisfrute > 0) {
+            VacacionesPorDisfrute::create([
+                'empleado_id' => $empleado->id,
+                'dias_por_disfrute' => $diasPorDisfrute,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Antigüedad y días por disfrute actualizados correctamente.');
+    }
+
+    // Obtener colección de empleados con antigüedad pendiente (años reales > tiempo_antiguedad almacenado)
+    protected function getEmpleadosConAntiguedadPendiente()
+    {
+        $hoy = Carbon::now();
+        $empleados = Empleado::whereNotNull('fecha_ingreso')->get();
+
+        $pendientes = $empleados->filter(function ($empleado) use ($hoy) {
+            $fechaIngreso = Carbon::parse($empleado->fecha_ingreso);
+            // diffInYears ya devuelve un entero (años completos), sin decimales
+            $aniosReales = $fechaIngreso->diffInYears($hoy);
+            $registrado = $empleado->tiempo_antiguedad ?? 0;
+
+            // Solo considerar empleados con al menos 1 año completo de diferencia
+            $diferencia = $aniosReales - $registrado;
+            return $diferencia >= 1;
+        })->values();
+
+        // Adjuntar años reales calculados para mostrar en la vista
+        $pendientes->transform(function ($empleado) use ($hoy) {
+            $fechaIngreso = Carbon::parse($empleado->fecha_ingreso);
+            $empleado->anios_reales = $fechaIngreso->diffInYears($hoy);
+            return $empleado;
+        });
+
+        return $pendientes;
     }
 }

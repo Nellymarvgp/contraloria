@@ -24,6 +24,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\NominaController;
 use App\Http\Controllers\VacacionController;
+use App\Http\Controllers\ReciboController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -52,7 +53,13 @@ Route::middleware('auth')->group(function () {
     Route::get('profile/edit', [UserController::class, 'edit'])->name('profile.edit');
     Route::put('profile/update', [UserController::class, 'update'])->name('profile.update');
     
+    // Rutas de recibos (disponibles para todos los usuarios autenticados)
+    Route::get('recibos', [ReciboController::class, 'index'])->name('recibos.index');
+    Route::get('recibos/{detalle}', [ReciboController::class, 'show'])->name('recibos.show');
+
     // Rutas de vacaciones (disponibles para todos los usuarios autenticados)
+    Route::get('vacaciones/disfrute', [VacacionController::class, 'disfruteResumen'])
+        ->name('vacaciones.disfrute');
     Route::resource('vacaciones', VacacionController::class);
     Route::post('vacaciones/{vacacion}/aprobar', [VacacionController::class, 'aprobar'])->name('vacaciones.aprobar');
     Route::post('vacaciones/{vacacion}/rechazar', [VacacionController::class, 'rechazar'])->name('vacaciones.rechazar');
@@ -63,7 +70,10 @@ Route::middleware('auth')->group(function () {
         
         // Rutas de gestión de empleados
         Route::post('empleados/import', [App\Http\Controllers\EmpleadoController::class, 'import'])->name('empleados.import');
-Route::resource('empleados', EmpleadoController::class);
+        // Ruta específica antes del resource para evitar conflicto con /empleados/{empleado}
+        Route::get('empleados/antiguedad-pendiente', [EmpleadoController::class, 'antiguedadPendiente'])->name('empleados.antiguedad.pendiente');
+        Route::post('empleados/{empleado}/actualizar-antiguedad', [EmpleadoController::class, 'actualizarAntiguedad'])->name('empleados.actualizar.antiguedad');
+        Route::resource('empleados', EmpleadoController::class);
         Route::get('empleados-import', [EmpleadoController::class, 'importForm'])->name('empleados.import.form');
         Route::post('empleados-import', [EmpleadoController::class, 'import'])->name('empleados.import');
         Route::resource('cargos', CargoController::class)->except(['show']);

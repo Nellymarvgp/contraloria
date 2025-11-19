@@ -26,7 +26,7 @@
 </div>
 
     <!-- Filtros por estado -->
-    <div class="mb-6 flex gap-4" x-data="{ estado: 'todas' }">
+    <div class="mb-6 flex gap-4 items-center" x-data="{ estado: 'todas' }">
         <button @click="estado = 'todas'" :class="estado === 'todas' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-50 transition">
             <i class="fas fa-list mr-2"></i>Todas
         </button>
@@ -39,6 +39,12 @@
         <button @click="estado = 'rechazada'" :class="estado === 'rechazada' ? 'bg-red-600 text-white' : 'bg-white text-gray-700'" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-red-50 transition">
             <i class="fas fa-times-circle mr-2"></i>Rechazadas
         </button>
+
+        @if(auth()->user()->isAdmin())
+            <a href="{{ route('vacaciones.disfrute') }}" class="ml-auto px-4 py-2 rounded-lg border border-purple-400 bg-purple-50 text-purple-700 hover:bg-purple-100 transition inline-flex items-center">
+                <i class="fas fa-sun mr-2"></i> Vacaciones por Disfrute
+            </a>
+        @endif
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -157,7 +163,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form method="POST" id="approveForm" data-action="{{ route('vacaciones.aprobar', ['__ID__']) }}">
+            <form method="POST" id="approveForm" data-action="{{ route('vacaciones.aprobar', ['vacacion' => '__ID__']) }}">
                 @csrf
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
@@ -187,7 +193,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form method="POST" id="rejectForm" data-action="{{ route('vacaciones.rechazar', ['__ID__']) }}">
+            <form method="POST" id="rejectForm" data-action="{{ route('vacaciones.rechazar', ['vacacion' => '__ID__']) }}">
                 @csrf
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="mb-4">

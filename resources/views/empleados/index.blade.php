@@ -18,6 +18,11 @@
                     <input type="file" name="archivo" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="hidden" onchange="this.form.submit()">
                 </label>
             </form>
+            @if(!empty($tienePendientes) && $tienePendientes)
+                <a href="{{ route('empleados.antiguedad.pendiente') }}" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded flex items-center">
+                    <i class="fas fa-history mr-2"></i> Actualizar Antigüedad / Disfrute
+                </a>
+            @endif
         </div>
     </div>
 

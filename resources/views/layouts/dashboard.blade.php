@@ -99,10 +99,12 @@
                 </a>
                 
                
-                <a href="#" class="block px-4 py-2 hover:bg-gray-700">
-                    <i class="fas fa-chart-bar mr-2"></i> Reportes
-                </a>
                 @endif
+
+                <!-- Recibos (disponible para todos los usuarios autenticados) -->
+                <a href="{{ route('recibos.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('recibos.*') ? 'bg-gray-700' : '' }}">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i> Recibos
+                </a>
                 
                 <!-- Vacaciones (disponible para todos) -->
                 <a href="{{ route('vacaciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('vacaciones.*') ? 'bg-gray-700' : '' }}">

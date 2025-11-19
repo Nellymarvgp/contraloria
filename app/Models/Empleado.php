@@ -98,4 +98,12 @@ class Empleado extends Model
     {
         return $this->hasMany(Vacacion::class);
     }
+
+    /**
+     * Registros de días por disfrute asignados al empleado.
+     */
+    public function vacacionesPorDisfrute()
+    {
+        return $this->hasMany(VacacionesPorDisfrute::class);
+    }
 }
