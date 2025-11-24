@@ -17,7 +17,7 @@
 </head>
 <body>
     @foreach($recibos as $recibo)
-        <img src="{{ public_path('logo.png') }}" class="logo" alt="Logo">
+        <img src="{{ public_path('images/logo.jpeg') }}" class="logo" alt="Logo">
         <div class="titulo">CONTRALORÍA DEL MUNICIPIO INDEPENDENCIA<br>RECIBO DE NÓMINA</div>
         <div class="datos">
             <b>Nómina:</b> {{ $recibo['nomina']->nombre }}<br>
@@ -38,24 +38,34 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($recibo['detalle']->conceptos as $concepto)
+                @foreach($recibo['detalle']->conceptos()->get() as $concepto)
                     <tr>
-                        <td>{{ $concepto->codigo }}</td>
-                        <td>{{ $concepto->nombre }}</td>
-                        <td>{{ $concepto->tipo == 'asignacion' ? number_format($concepto->monto, 2) : '' }}</td>
-                        <td>{{ $concepto->tipo == 'deduccion' ? number_format($concepto->monto, 2) : '' }}</td>
+                        <td></td>
+                        <td>{{ $concepto->descripcion }}</td>
+                        <td>{{ $concepto->tipo == 'asignacion' ? number_format($concepto->monto, 2) . ' Bs' : '' }}</td>
+                        <td>{{ $concepto->tipo == 'deduccion' ? number_format($concepto->monto, 2) . ' Bs' : '' }}</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
         <br>
-        <b>Total Asignaciones:</b> {{ number_format($recibo['detalle']->conceptos->where('tipo','asignacion')->sum('monto'),2) }}<br>
-        <b>Total Deducciones:</b> {{ number_format($recibo['detalle']->conceptos->where('tipo','deduccion')->sum('monto'),2) }}<br>
-        <b>Neto a Cobrar:</b> {{ number_format($recibo['detalle']->conceptos->where('tipo','asignacion')->sum('monto') - $recibo['detalle']->conceptos->where('tipo','deduccion')->sum('monto'),2) }}
+        @php(
+            $totalAsignaciones = $recibo['detalle']->conceptos()
+                ->where('tipo','asignacion')
+                ->sum('monto')
+        )
+        @php(
+            $totalDeducciones = $recibo['detalle']->conceptos()
+                ->where('tipo','deduccion')
+                ->sum('monto')
+        )
+        <b>Total Asignaciones:</b> {{ number_format($totalAsignaciones, 2) }} Bs<br>
+        <b>Total Deducciones:</b> {{ number_format($totalDeducciones, 2) }} Bs<br>
+        <b>Neto a Cobrar:</b> {{ number_format($totalAsignaciones - $totalDeducciones, 2) }} Bs
         <div class="firma">
             <br><br>
             <div class="firma-linea">RECIBÍ CONFORME: _________________________</div>
-            <div style="text-align:center;margin-top:5px;">{{ $recibo['empleado']->nombre }} {{ $recibo['empleado']->apellido }}</div>
+            <div style="text-align:center;margin-top:5px;">{{ $recibo['empleado']->user->nombre }} {{ $recibo['empleado']->user->apellido }}</div>
         </div>
         @if(!$loop->last)
             <div class="page-break"></div>

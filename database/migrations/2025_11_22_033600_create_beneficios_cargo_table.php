@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('deduction_configs', function (Blueprint $table) {
+        Schema::create('beneficios_cargo', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo', 20);
-            $table->string('nombre', 100);
-            $table->string('descripcion', 255)->nullable();
-            $table->decimal('porcentaje', 8, 4);
-            $table->boolean('activo')->default(true);
+            $table->foreignId('beneficio_id')
+                  ->constrained('beneficios')
+                  ->onDelete('cascade');
+            $table->string('cargo');
+            $table->decimal('porcentaje', 10, 2)->nullable();
+            $table->decimal('valor', 10, 2)->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('deduction_configs');
+        Schema::dropIfExists('beneficios_cargo');
     }
 };

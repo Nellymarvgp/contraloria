@@ -280,14 +280,8 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Beneficios personalizados</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                    @foreach($beneficios as $beneficio)
-                        <label class="inline-flex items-center p-2 bg-gray-50 hover:bg-gray-100 rounded">
-                            <input type="checkbox" name="beneficios[]" value="{{ $beneficio->id }}"
-                                {{ (is_array(old('beneficios', $empleado->beneficios->pluck('id')->toArray())) && in_array($beneficio->id, old('beneficios', $empleado->beneficios->pluck('id')->toArray()))) ? 'checked' : '' }}>
-                            <span class="ml-2">{{ $beneficio->nombre }}</span>
-                        </label>
-                    @endforeach
+                <div id="beneficios-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    {{-- Los beneficios se cargarán dinámicamente según el cargo seleccionado --}}
                 </div>
             </div>
             
@@ -370,6 +364,64 @@ document.addEventListener('DOMContentLoaded', function() {
     tipoCargo.addEventListener('change', filtrarGruposCargo);
     // Ejecutar el filtro al cargar la página
     filtrarGruposCargo();
+
+    // Cargar beneficios por cargo
+    function cargarBeneficiosPorCargo() {
+        const cargoSelect = document.getElementById('cargo_id');
+        const container = document.getElementById('beneficios-container');
+        if (!cargoSelect || !container) return;
+
+        const cargoId = cargoSelect.value;
+        container.innerHTML = '';
+
+        if (!cargoId) {
+            return;
+        }
+
+        fetch(`/empleados/beneficios-por-cargo/${cargoId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al obtener beneficios por cargo');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!Array.isArray(data)) return;
+                const seleccionados = @json(old('beneficios', $empleado->beneficios->pluck('id')->toArray()));
+                data.forEach(beneficio => {
+                    const label = document.createElement('label');
+                    label.className = 'inline-flex items-center p-2 bg-gray-50 hover:bg-gray-100 rounded';
+
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = 'beneficios[]';
+                    input.value = beneficio.id;
+                    input.setAttribute('form', 'editEmpleadoForm');
+                    if (Array.isArray(seleccionados) && seleccionados.includes(beneficio.id)) {
+                        input.checked = true;
+                    }
+
+                    const span = document.createElement('span');
+                    span.className = 'ml-2';
+                    span.textContent = beneficio.beneficio;
+
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    container.appendChild(label);
+                });
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    }
+
+    const cargoSelect = document.getElementById('cargo_id');
+    if (cargoSelect) {
+        cargoSelect.addEventListener('change', cargarBeneficiosPorCargo);
+        if (cargoSelect.value) {
+            cargarBeneficiosPorCargo();
+        }
+    }
     
     // Validación de formulario
     const form = document.getElementById('editEmpleadoForm');

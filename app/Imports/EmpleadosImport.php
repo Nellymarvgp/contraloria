@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Carbon\Carbon;
 
 class EmpleadosImport implements ToModel, WithHeadingRow, WithValidation
 {
@@ -54,6 +55,14 @@ class EmpleadosImport implements ToModel, WithHeadingRow, WithValidation
                 $grupo_cargo_id = $grupoCargo ? $grupoCargo->id : null;
             }
 
+            // Determinar fecha de ingreso segura
+            $fechaIngreso = isset($row['fecha_ingreso']) && !empty($row['fecha_ingreso'])
+                ? Carbon::parse($row['fecha_ingreso'])
+                : Carbon::now();
+
+            // Calcular tiempo de antigüedad en años
+            $tiempoAntiguedad = $fechaIngreso->diffInYears(Carbon::now());
+
             // Crear el empleado asociado al usuario con valores seguros
             return new Empleado([
                 'cedula' => $row['cedula'],
@@ -62,7 +71,8 @@ class EmpleadosImport implements ToModel, WithHeadingRow, WithValidation
                 'horario_id' => $row['horario_id'] ?? 1, // Asignar valor por defecto
                 'estado_id' => $row['estado_id'] ?? 1,
                 'salario' => $row['salario'] ?? 0,
-                'fecha_ingreso' => isset($row['fecha_ingreso']) ? $row['fecha_ingreso'] : now()->format('Y-m-d'),
+                'fecha_ingreso' => $fechaIngreso->format('Y-m-d'),
+                'tiempo_antiguedad' => $tiempoAntiguedad,
                 'observaciones' => $row['observaciones'] ?? null,
                 'prima_antiguedad_id' => $row['prima_antiguedad_id'] ?? null,
                 'prima_profesionalizacion_id' => $row['prima_profesionalizacion_id'] ?? null,
