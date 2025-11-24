@@ -69,7 +69,8 @@ class NominaController extends Controller
     public function show(Nomina $nomina)
     {
         $nomina->load('detalles.empleado', 'detalles.conceptos');
-        return view('nominas.show', compact('nomina'));
+        $beneficios = \App\Models\Beneficio::all();
+        return view('nominas.show', compact('nomina', 'beneficios'));
     }
 
     /**
@@ -117,7 +118,7 @@ class NominaController extends Controller
                 // Calculate payroll for employee (pass Nomina for date-conditional concepts)
                 $calculationResult = $this->nominaCalculator->calculate($empleado, $nomina);
                 
-                // Create payroll detail
+                // Create payroll detail, persistiendo también prima por hijo
                 $detalle = NominaDetalle::create([
                     'nomina_id' => $nomina->id,
                     'empleado_id' => $empleado->id,
@@ -125,27 +126,7 @@ class NominaController extends Controller
                     'prima_profesionalizacion' => $calculationResult['prima_profesionalizacion'],
                     'prima_antiguedad' => $calculationResult['prima_antiguedad'],
                     'prima_por_hijo' => $calculationResult['prima_por_hijo'],
-                    'comida' => $calculationResult['comida'],
-                    'otras_primas' => $calculationResult['otras_primas'],
-                    'ret_ivss' => $calculationResult['ret_ivss'],
-                    'ret_pie' => $calculationResult['ret_pie'],
-                    'ret_lph' => $calculationResult['ret_lph'],
-                    'ret_fpj' => $calculationResult['ret_fpj'],
-                    'ordinaria' => $calculationResult['ordinaria'],
-                    'incentivo' => $calculationResult['incentivo'],
-                    'feriado' => $calculationResult['feriado'],
-                    'gastos_representacion' => $calculationResult['gastos_representacion'],
                     'total' => $calculationResult['total'],
-                    'txt_1' => $calculationResult['txt_1'],
-                    'txt_2' => $calculationResult['txt_2'],
-                    'txt_3' => $calculationResult['txt_3'],
-                    'txt_4' => $calculationResult['txt_4'],
-                    'txt_5' => $calculationResult['txt_5'],
-                    'txt_6' => $calculationResult['txt_6'],
-                    'txt_7' => $calculationResult['txt_7'],
-                    'txt_8' => $calculationResult['txt_8'],
-                    'txt_9' => $calculationResult['txt_9'],
-                    'txt_10' => $calculationResult['txt_10']
                 ]);
 
                 // Create concepts
@@ -201,9 +182,17 @@ class NominaController extends Controller
      */
     public function exportPdf(Nomina $nomina)
     {
-        $nomina->load('detalles.empleado.user', 'detalles.empleado.cargo', 'detalles.empleado.departamento');
+        // Cargar todos los datos necesarios para armar la tabla dinámica
+        $nomina->load(
+            'detalles.empleado.user',
+            'detalles.empleado.cargo',
+            'detalles.empleado.departamento',
+            'detalles.conceptos'
+        );
 
-        $pdf = Pdf::loadView('nominas.ordinaria_pdf', compact('nomina'))
+        $beneficios = \App\Models\Beneficio::all();
+
+        $pdf = Pdf::loadView('nominas.ordinaria_pdf', compact('nomina', 'beneficios'))
             ->setPaper('A4', 'landscape');
 
         $filename = 'nomina_ordinaria_' . $nomina->id . '.pdf';

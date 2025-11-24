@@ -18,6 +18,9 @@ return new class extends Migration
             $table->foreignId('estado_id')->constrained('estados');
             $table->decimal('salario', 10, 2);
             $table->date('fecha_ingreso');
+            $table->boolean('tiene_hijos')->default(false);
+            $table->unsignedTinyInteger('cantidad_hijos')->nullable();
+            $table->integer('tiempo_antiguedad')->default(0);
             $table->text('observaciones')->nullable();
             $table->timestamps();
         });

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('remuneracions', function (Blueprint $table) {
-            $table->dropColumn(['valor_minimo', 'valor_maximo']);
+        Schema::table('beneficios', function (Blueprint $table) {
+            $table->date('fecha_beneficio')->nullable()->after('beneficio');
         });
     }
 
@@ -21,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('remuneracions', function (Blueprint $table) {
-            $table->decimal('valor_minimo', 10, 2)->nullable();
-            $table->decimal('valor_maximo', 10, 2)->nullable();
+        Schema::table('beneficios', function (Blueprint $table) {
+            $table->dropColumn('fecha_beneficio');
         });
     }
 };

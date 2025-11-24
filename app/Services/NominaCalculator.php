@@ -7,7 +7,9 @@ use App\Models\Nomina;
 use App\Models\Remuneracion;
 use App\Models\PrimaAntiguedad;
 use App\Models\PrimaProfesionalizacion;
+use App\Models\PrimaHijo;
 use App\Models\Deduccion;
+use App\Models\BeneficioCargo;
 use Carbon\Carbon;
 
 class NominaCalculator
@@ -21,36 +23,41 @@ class NominaCalculator
     public function calculate(Empleado $empleado, Nomina $nomina)
     {
         // Base calculations
-        $sueldoBasico = $this->calcularSueldoBasico($empleado);
+        // Primero calcular el sueldo "quincenal" (mitad) como hasta ahora
+        $sueldoBasicoQuincenal = $this->calcularSueldoBasico($empleado);
+
+        // Calcular días del período de la nómina
+        $diasPeriodo = null;
+        if ($nomina->fecha_inicio && $nomina->fecha_fin) {
+            $diasPeriodo = $nomina->fecha_inicio->diffInDays($nomina->fecha_fin) + 1;
+        }
+
+        // Regla solicitada:
+        // - Si el cálculo tiene más de 25 días, se toma el sueldo completo (doble de la base quincenal).
+        // - Si el cálculo tiene 15 días (o en general <= 25), se toma solo la mitad del sueldo base.
+        if ($diasPeriodo !== null && $diasPeriodo > 25) {
+            $sueldoBasico = $sueldoBasicoQuincenal * 2;
+        } else {
+            $sueldoBasico = $sueldoBasicoQuincenal;
+        }
+
         $primaProfesionalizacion = $this->calcularPrimaProfesionalizacion($empleado, $sueldoBasico);
         $primaAntiguedad = $this->calcularPrimaAntiguedad($empleado, $sueldoBasico);
-        $primaPorHijo = $this->calcularPrimaPorHijo($empleado);
+        $primaPorHijo = $this->calcularPrimaPorHijo($empleado, $sueldoBasico);
         $comida = $this->calcularComida($nomina);
         $otrasPrimas = $this->calcularOtrasPrimas($empleado);
         
-        // Retenciones (deductions)
-        $retIvss = $this->calcularRetIVSS($sueldoBasico);
-        $retPie = $this->calcularRetPIE($sueldoBasico);
-        $retLph = $this->calcularRetLPH($sueldoBasico);
-        $retFpj = $this->calcularRetFPJ($sueldoBasico);
+        // Retenciones (deductions) - solo si el empleado tiene asignadas esas deducciones
+        $retIvss = $this->calcularRetIVSS($empleado, $sueldoBasico);
+        $retPie = $this->calcularRetPIE($empleado, $sueldoBasico);
+        $retLph = $this->calcularRetLPH($empleado, $sueldoBasico);
+        $retFpj = $this->calcularRetFPJ($empleado, $sueldoBasico);
         
-        // Asignaciones adicionales
+        // Asignaciones adicionales (ahora manejadas como beneficios generales)
         $ordinaria = $this->calcularOrdinaria($sueldoBasico);
         $incentivo = $this->calcularIncentivo($empleado);
         $feriado = $this->calcularFeriado();
         $gastosRepresentacion = $this->calcularGastosRepresentacion($empleado);
-        
-        // Additional text fields (may be used for special bonuses or calculations)
-        $txt1 = $this->calcularTxt1();
-        $txt2 = $this->calcularTxt2();
-        $txt3 = $this->calcularTxt3();
-        $txt4 = $this->calcularTxt4();
-        $txt5 = $this->calcularTxt5();
-        $txt6 = $this->calcularTxt6();
-        $txt7 = $this->calcularTxt7();
-        $txt8 = $this->calcularTxt8();
-        $txt9 = $this->calcularTxt9();
-        $txt10 = $this->calcularTxt10();
         
         // Calculate total
         $total = $this->calcularTotal(
@@ -87,16 +94,6 @@ class NominaCalculator
             'feriado' => $feriado,
             'gastos_representacion' => $gastosRepresentacion,
             'total' => $total,
-            'txt_1' => $txt1,
-            'txt_2' => $txt2,
-            'txt_3' => $txt3,
-            'txt_4' => $txt4,
-            'txt_5' => $txt5,
-            'txt_6' => $txt6,
-            'txt_7' => $txt7,
-            'txt_8' => $txt8,
-            'txt_9' => $txt9,
-            'txt_10' => $txt10,
             'conceptos' => $this->generarConceptos(
                 $sueldoBasico,
                 $primaProfesionalizacion,
@@ -112,7 +109,8 @@ class NominaCalculator
                 $incentivo,
                 $feriado,
                 $gastosRepresentacion,
-                $empleado
+                $empleado,
+                $nomina
             )
         ];
     }
@@ -193,16 +191,31 @@ class NominaCalculator
      * Calculate children bonus.
      *
      * @param Empleado $empleado
+     * @param Empleado $empleado
+     * @param float $sueldoBasico
      * @return float
      */
-    protected function calcularPrimaPorHijo(Empleado $empleado)
+    protected function calcularPrimaPorHijo(Empleado $empleado, $sueldoBasico)
     {
-        // Get the amount per child from the unified configuration
-        $beneficio = Deduccion::findActiveBenefit('prima_por_hijo');
-        $montoPorHijo = $beneficio ? $beneficio->getValor() : 6.25; // Valor por defecto
-        $numeroHijos = $empleado->numero_hijos ?? 0;
-        
-        return round($montoPorHijo * $numeroHijos, 2);
+        // Usar la cantidad de hijos del perfil del empleado
+        $numeroHijos = (int) ($empleado->cantidad_hijos ?? 0);
+        if ($numeroHijos <= 0) {
+            return 0.0;
+        }
+
+        // Buscar configuración en la tabla prima_hijos con hijos <= cantidad_hijos,
+        // tomando el registro con mayor número de hijos dentro de ese rango
+        $config = PrimaHijo::where('hijos', '<=', $numeroHijos)
+            ->where('estado', true)
+            ->orderByDesc('hijos')
+            ->first();
+
+        if (!$config) {
+            return 0.0;
+        }
+
+        // Calcular prima como porcentaje del sueldo básico
+        return round($sueldoBasico * ($config->porcentaje / 100), 2);
     }
     
     /**
@@ -240,11 +253,12 @@ class NominaCalculator
      * @param float $sueldoBasico
      * @return float
      */
-    protected function calcularRetIVSS($sueldoBasico)
+    protected function calcularRetIVSS(Empleado $empleado, $sueldoBasico)
     {
-        // Get IVSS percentage from existing deduction table
-        $deduccion = Deduccion::where('nombre', 'IVSS')
+        // Buscar IVSS solo entre las deducciones asignadas al empleado
+        $deduccion = $empleado->deducciones()
             ->where('activo', true)
+            ->where('nombre', 'IVSS')
             ->first();
             
         if ($deduccion) {
@@ -255,8 +269,8 @@ class NominaCalculator
             }
         }
         
-        // Fallback to default 4%
-        return round($sueldoBasico * 0.04, 2);
+        // Si el empleado no tiene asignada esta deducción, no se aplica ningún cálculo
+        return 0.00;
     }
     
     /**
@@ -265,11 +279,12 @@ class NominaCalculator
      * @param float $sueldoBasico
      * @return float
      */
-    protected function calcularRetPIE($sueldoBasico)
+    protected function calcularRetPIE(Empleado $empleado, $sueldoBasico)
     {
-        // Get PIE percentage from existing deduction table
-        $deduccion = Deduccion::where('nombre', 'PIE')
+        // Buscar PIE solo entre las deducciones asignadas al empleado
+        $deduccion = $empleado->deducciones()
             ->where('activo', true)
+            ->where('nombre', 'PIE')
             ->first();
             
         if ($deduccion) {
@@ -280,8 +295,8 @@ class NominaCalculator
             }
         }
         
-        // Fallback to default 0.5%
-        return round($sueldoBasico * 0.005, 2);
+        // Si no hay deducción configurada en BD, no se aplica ningún cálculo
+        return 0.00;
     }
     
     /**
@@ -290,11 +305,12 @@ class NominaCalculator
      * @param float $sueldoBasico
      * @return float
      */
-    protected function calcularRetLPH($sueldoBasico)
+    protected function calcularRetLPH(Empleado $empleado, $sueldoBasico)
     {
-        // Get LPH percentage from existing deduction table
-        $deduccion = Deduccion::where('nombre', 'LPH')
+        // Buscar LPH solo entre las deducciones asignadas al empleado
+        $deduccion = $empleado->deducciones()
             ->where('activo', true)
+            ->where('nombre', 'LPH')
             ->first();
             
         if ($deduccion) {
@@ -305,8 +321,8 @@ class NominaCalculator
             }
         }
         
-        // Fallback to default 1%
-        return round($sueldoBasico * 0.01, 2);
+        // Si no hay deducción configurada en BD, no se aplica ningún cálculo
+        return 0.00;
     }
     
     /**
@@ -315,11 +331,12 @@ class NominaCalculator
      * @param float $sueldoBasico
      * @return float
      */
-    protected function calcularRetFPJ($sueldoBasico)
+    protected function calcularRetFPJ(Empleado $empleado, $sueldoBasico)
     {
-        // Get FPJ percentage from existing deduction table
-        $deduccion = Deduccion::where('nombre', 'FPJ')
+        // Buscar FPJ solo entre las deducciones asignadas al empleado
+        $deduccion = $empleado->deducciones()
             ->where('activo', true)
+            ->where('nombre', 'FPJ')
             ->first();
             
         if ($deduccion) {
@@ -330,8 +347,8 @@ class NominaCalculator
             }
         }
         
-        // Fallback to default 2%
-        return round($sueldoBasico * 0.02, 2);
+        // Si no hay deducción configurada en BD, no se aplica ningún cálculo
+        return 0.00;
     }
     
     /**
@@ -342,20 +359,8 @@ class NominaCalculator
      */
     protected function calcularOrdinaria($sueldoBasico)
     {
-        $beneficio = Deduccion::findActiveBenefit('ordinaria');
-        
-        if ($beneficio) {
-            if ($beneficio->es_fijo) {
-                // Apply fixed amount
-                return $beneficio->monto_fijo;
-            } else {
-                // Apply percentage of base salary
-                return round($sueldoBasico * ($beneficio->porcentaje / 100), 2);
-            }
-        }
-        
-        // Default fallback (150% of base salary)
-        return round($sueldoBasico * 1.5, 2);
+        // ORDINARIA ahora se manejará como un beneficio general vía Beneficio/BeneficioCargo
+        return 0.00;
     }
     
     /**
@@ -366,9 +371,8 @@ class NominaCalculator
      */
     protected function calcularIncentivo(Empleado $empleado)
     {
-        // Get incentive from unified configuration
-        $beneficio = Deduccion::findActiveBenefit('incentivo');
-        return $beneficio ? $beneficio->getValor() : 1000.00; // Valor por defecto
+        // INCENTIVO ahora se manejará como un beneficio general vía Beneficio/BeneficioCargo
+        return 0.00;
     }
     
     /**
@@ -378,9 +382,9 @@ class NominaCalculator
      */
     protected function calcularFeriado()
     {
-        // Get holiday pay from unified configuration
-        $beneficio = Deduccion::findActiveBenefit('feriado');
-        return $beneficio ? $beneficio->getValor() : 1210.00; // Valor por defecto
+        // La bonificación por feriado ya no se maneja como beneficio global.
+        // Si se requiere en el futuro, debe configurarse como Beneficio + BeneficioCargo.
+        return 0.00;
     }
     
     /**
@@ -406,125 +410,8 @@ class NominaCalculator
         return 0.00;
     }
     
-    /**
-     * Calculate TXT1 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt1()
-    {
-        // Get TXT1 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_1');
-        return $parametro ? $parametro->getValor() : 600.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT2 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt2()
-    {
-        // Get TXT2 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_2');
-        return $parametro ? $parametro->getValor() : 590.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT3 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt3()
-    {
-        // Get TXT3 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_3');
-        return $parametro ? $parametro->getValor() : 580.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT4 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt4()
-    {
-        // Get TXT4 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_4');
-        return $parametro ? $parametro->getValor() : 570.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT5 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt5()
-    {
-        // Get TXT5 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_5');
-        return $parametro ? $parametro->getValor() : 560.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT6 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt6()
-    {
-        // Get TXT6 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_6');
-        return $parametro ? $parametro->getValor() : 550.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT7 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt7()
-    {
-        // Get TXT7 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_7');
-        return $parametro ? $parametro->getValor() : 0.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT8 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt8()
-    {
-        // Get TXT8 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_8');
-        return $parametro ? $parametro->getValor() : 0.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT9 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt9()
-    {
-        // Get TXT9 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_9');
-        return $parametro ? $parametro->getValor() : 0.00; // Valor por defecto
-    }
-    
-    /**
-     * Calculate TXT10 field value.
-     *
-     * @return float
-     */
-    protected function calcularTxt10()
-    {
-        // Get TXT10 value from unified configuration
-        $parametro = Deduccion::findActiveParameter('txt_10');
-        return $parametro ? $parametro->getValor() : 0.00; // Valor por defecto
-    }
+    // Métodos calcularTxt1..calcularTxt10 eliminados porque los campos txt_1..txt_10
+    // ya no se utilizan en el sistema ni en base de datos.
     
     /**
      * Calculate total amount.
@@ -607,7 +494,8 @@ class NominaCalculator
         $incentivo,
         $feriado,
         $gastosRepresentacion,
-        Empleado $empleado
+        Empleado $empleado,
+        Nomina $nomina
     ) {
         $conceptos = [];
         
@@ -718,7 +606,7 @@ class NominaCalculator
                 'tipo' => 'deduccion',
                 'descripcion' => 'Retención IVSS',
                 'monto' => $retIvss,
-                'porcentaje' => 4, // 4% IVSS
+                'porcentaje' => null,
                 'es_fijo' => false
             ];
         }
@@ -728,7 +616,7 @@ class NominaCalculator
                 'tipo' => 'deduccion',
                 'descripcion' => 'Retención PIE',
                 'monto' => $retPie,
-                'porcentaje' => 0.5, // 0.5% PIE
+                'porcentaje' => null,
                 'es_fijo' => false
             ];
         }
@@ -738,7 +626,7 @@ class NominaCalculator
                 'tipo' => 'deduccion',
                 'descripcion' => 'Retención LPH',
                 'monto' => $retLph,
-                'porcentaje' => 1, // 1% LPH
+                'porcentaje' => null,
                 'es_fijo' => false
             ];
         }
@@ -748,7 +636,7 @@ class NominaCalculator
                 'tipo' => 'deduccion',
                 'descripcion' => 'Retención FPJ',
                 'monto' => $retFpj,
-                'porcentaje' => 2, // 2% FPJ (example)
+                'porcentaje' => null,
                 'es_fijo' => false
             ];
         }
@@ -759,27 +647,64 @@ class NominaCalculator
             $existentes[$c['tipo'].'|'.$c['descripcion']] = true;
         }
 
+        // Obtener rango de días de la nómina (solo el día del mes)
+        $desdeDia = $nomina->fecha_inicio ? (int) $nomina->fecha_inicio->day : null;
+        $hastaDia = $nomina->fecha_fin ? (int) $nomina->fecha_fin->day : null;
+
         // Beneficios (asignaciones) asignados al empleado
-        $beneficiosEmpleado = $empleado->beneficios()->where('activo', true)->get();
+        $beneficiosEmpleado = $empleado->beneficios()->get();
         foreach ($beneficiosEmpleado as $beneficio) {
+            // Filtrar por día de fecha_beneficio: aplica si
+            // - fecha_beneficio es null (puede calcularse cualquier día), o
+            // - el día de fecha_beneficio está entre desdeDia y hastaDia (inclusive)
+            $aplicaPorFecha = true;
+            if ($beneficio->fecha_beneficio && $desdeDia !== null && $hastaDia !== null) {
+                $diaBeneficio = (int) $beneficio->fecha_beneficio->day;
+                if ($diaBeneficio < $desdeDia || $diaBeneficio > $hastaDia) {
+                    $aplicaPorFecha = false;
+                }
+            }
+
+            if (!$aplicaPorFecha) {
+                continue;
+            }
+
             $monto = 0;
+
+            // 1) Si el pivote tiene un valor_extra, tiene prioridad
             if (!is_null($beneficio->pivot->valor_extra)) {
                 $monto = (float) $beneficio->pivot->valor_extra;
-            } elseif ($beneficio->es_fijo) {
-                $monto = (float) $beneficio->monto_fijo;
             } else {
-                $monto = round($sueldoBasico * ($beneficio->porcentaje / 100), 2);
+                // 2) Buscar configuración por cargo en BeneficioCargo (tipo de cargo del empleado o 'Todos')
+                $tipoCargo = $empleado->cargo ? $empleado->cargo->tipo_cargo : null;
+
+                $config = BeneficioCargo::where('beneficio_id', $beneficio->id)
+                    ->when($tipoCargo, function ($query) use ($tipoCargo) {
+                        $query->whereIn('cargo', [$tipoCargo, 'Todos']);
+                    }, function ($query) {
+                        $query->where('cargo', 'Todos');
+                    })
+                    ->orderByRaw("CASE WHEN cargo = ? THEN 0 WHEN cargo = 'Todos' THEN 1 ELSE 2 END", [$tipoCargo])
+                    ->first();
+
+                if ($config) {
+                    if (!is_null($config->valor)) {
+                        $monto = (float) $config->valor;
+                    } elseif (!is_null($config->porcentaje)) {
+                        $monto = round($sueldoBasico * ($config->porcentaje / 100), 2);
+                    }
+                }
             }
 
             if ($monto > 0) {
-                $clave = 'asignacion|'.$beneficio->nombre;
+                $clave = 'asignacion|'.$beneficio->beneficio;
                 if (!isset($existentes[$clave])) {
                     $conceptos[] = [
                         'tipo' => 'asignacion',
-                        'descripcion' => $beneficio->nombre,
+                        'descripcion' => $beneficio->beneficio,
                         'monto' => $monto,
-                        'porcentaje' => $beneficio->es_fijo ? null : $beneficio->porcentaje,
-                        'es_fijo' => $beneficio->es_fijo
+                        'porcentaje' => null,
+                        'es_fijo' => false,
                     ];
                     $existentes[$clave] = true;
                 }
@@ -789,6 +714,10 @@ class NominaCalculator
         // Deducciones asignadas al empleado
         $deduccionesEmpleado = $empleado->deducciones()->where('activo', true)->get();
         foreach ($deduccionesEmpleado as $ded) {
+            // Evitar duplicar las deducciones especiales ya tratadas arriba
+            if (in_array($ded->nombre, ['IVSS', 'PIE', 'LPH', 'FPJ'])) {
+                continue;
+            }
             $monto = 0;
             if (!is_null($ded->pivot->valor_extra)) {
                 $monto = (float) $ded->pivot->valor_extra;

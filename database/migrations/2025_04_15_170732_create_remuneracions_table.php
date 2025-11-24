@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('remuneracions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('nivel_rango_id');
-            $table->unsignedBigInteger('grupo_cargo_id');
-            $table->enum('tipo_cargo', ['administrativo', 'tecnico_superior', 'profesional_universitario']);
-            $table->decimal('valor', 12, 2);
+            $table->unsignedBigInteger('nivel_rango_id')->nullable();
+            $table->unsignedBigInteger('grupo_cargo_id')->nullable();
+            $table->string('tipo_cargo')->nullable();
+            $table->enum('tipo_personal', ['obreros', 'administracion_publica'])->nullable();
+            $table->enum('clasificacion', ['no_calificados', 'calificados', 'supervisor'])->nullable();
+            $table->tinyInteger('grado')->nullable();
+            $table->decimal('valor', 15, 2)->nullable();
             $table->boolean('estado')->default(true);
             $table->timestamps();
 

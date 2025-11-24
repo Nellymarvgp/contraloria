@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Vacacion;
 use App\Models\Empleado;
 use App\Models\VacacionesPorDisfrute;
+use App\Models\PagoVacaciones;
 use App\Mail\VacacionAprobada;
 use App\Mail\VacacionRechazada;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 class VacacionController extends Controller
@@ -36,6 +39,30 @@ class VacacionController extends Controller
         }
 
         return view('vacaciones.index', compact('vacaciones'));
+    }
+
+    /**
+     * Listar empleados con vacaciones pendientes de pago (pvacaciones = false).
+     * Solo accesible para administradores.
+     */
+    public function porPagar()
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin()) {
+            return redirect()->route('vacaciones.index')->with('error', 'Acceso no autorizado.');
+        }
+
+        // Si la columna pvacaciones aún no existe (migración no ejecutada),
+        // devolvemos una colección vacía para evitar errores SQL.
+        if (!Schema::hasColumn('empleados', 'pvacaciones')) {
+            $empleados = collect();
+        } else {
+            $empleados = Empleado::with(['user', 'cargo', 'departamento'])
+                ->where('pvacaciones', false)
+                ->get();
+        }
+
+        return view('vacaciones.por_pagar', compact('empleados'));
     }
 
     /**
@@ -270,6 +297,43 @@ class VacacionController extends Controller
 
         return redirect()->route('vacaciones.index')
             ->with('success', 'Solicitud rechazada y notificación enviada');
+    }
+
+    /**
+     * Marcar el pago de vacaciones pendientes para un empleado.
+     * La lógica concreta de negocio se definirá posteriormente.
+     */
+    public function pagarPendiente(Empleado $empleado)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin()) {
+            return redirect()->route('vacaciones.por_pagar')->with('error', 'Acceso no autorizado.');
+        }
+
+        $year = now()->year;
+        $periodo = ($year - 1) . ' - ' . $year;
+        $monto = round(($empleado->salario / 30) * 15, 2);
+
+        $empleado->pvacaciones = true;
+        $empleado->save();
+
+        PagoVacaciones::create([
+            'empleado_id' => $empleado->id,
+            'periodo' => $periodo,
+            'monto' => $monto,
+            'year' => $year,
+        ]);
+
+        $pdf = Pdf::loadView('vacaciones.pago_pdf', [
+            'empleado' => $empleado,
+            'periodo' => $periodo,
+            'monto' => $monto,
+            'year' => $year,
+        ])->setPaper('A4', 'portrait');
+
+        $filename = 'pago_vacaciones_' . $empleado->cedula . '_' . $year . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     /**

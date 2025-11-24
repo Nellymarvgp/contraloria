@@ -111,7 +111,7 @@
                             @if($empleado->beneficios && $empleado->beneficios->count())
                                 <ul class="list-disc pl-4">
                                     @foreach($empleado->beneficios as $b)
-                                        <li>{{ $b->nombre }}</li>
+                                        <li>{{ $b->beneficio }}</li>
                                     @endforeach
                                 </ul>
                             @else

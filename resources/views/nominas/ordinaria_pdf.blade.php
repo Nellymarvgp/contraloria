@@ -16,7 +16,10 @@
     </style>
 </head>
 <body>
-    <div class="title">NÓMINA ORDINARIA</div>
+    <div style="position: relative;">
+        <img src="{{ public_path('images/logo.jpeg') }}" alt="Logo" style="position: absolute; top: 0; right: 0; height: 40px;">
+        <div class="title">NÓMINA ORDINARIA</div>
+    </div>
     <div class="subtitle">
         {{ $nomina->despacho }}<br>
         Periodo: {{ $nomina->fecha_inicio->format('d/m/Y') }} - {{ $nomina->fecha_fin->format('d/m/Y') }}
@@ -25,65 +28,94 @@
     <table>
         <thead>
             <tr>
-                <th>NOMBRE(S) Y APELLIDO(S)</th>
                 <th>CEDULA</th>
-                <th>SUELDO BASE</th>
-                <th>PRIMA DE PROFESIONALIZACION</th>
-                <th>PRIMA DE ANTIGUEDAD</th>
+                <th>NOMBRE(S) Y APELLIDO(S)</th>
+                <th>SUELDO BÁSICO</th>
+                <th>PRIMA PROF.</th>
+                <th>PRIMA ANTIG.</th>
                 <th>PRIMA POR HIJO</th>
-                <th>COMIDA</th>
-                <th>OTRAS PRIMAS</th>
-                <th>RET IVSS</th>
-                <th>RET PIE</th>
-                <th>RET LPH</th>
-                <th>RET FPJ</th>
-                <th>ORDINARIA</th>
-                <th>INCENTIVO</th>
-                <th>FERIADO</th>
-                <th>GASTOS DE REPRESENTACION</th>
+                @foreach($beneficios as $beneficio)
+                    <th>{{ strtoupper($beneficio->beneficio) }}</th>
+                @endforeach
                 <th>TOTAL</th>
             </tr>
         </thead>
         <tbody>
             @foreach($nomina->detalles as $detalle)
                 <tr>
-                    <td>{{ $detalle->empleado->user->nombre ?? 'N/A' }} {{ $detalle->empleado->user->apellido ?? 'N/A' }}</td>
                     <td class="text-center">{{ $detalle->empleado->cedula }}</td>
-                    <td class="text-right">{{ number_format($detalle->sueldo_basico, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->prima_profesionalizacion, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->prima_antiguedad, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->prima_por_hijo, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->comida, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->otras_primas, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->ret_ivss, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->ret_pie, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->ret_lph, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->ret_fpj, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->ordinaria, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->incentivo, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->feriado, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->gastos_representacion, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($detalle->total, 2, ',', '.') }}</td>
+                    <td>{{ $detalle->empleado->user->nombre ?? 'N/A' }} {{ $detalle->empleado->user->apellido ?? 'N/A' }}</td>
+                    <td class="text-right">{{ number_format($detalle->sueldo_basico, 2, ',', '.') }} Bs</td>
+                    <td class="text-right">{{ number_format($detalle->prima_profesionalizacion, 2, ',', '.') }} Bs</td>
+                    <td class="text-right">{{ number_format($detalle->prima_antiguedad, 2, ',', '.') }} Bs</td>
+                    <td class="text-right">{{ number_format($detalle->prima_por_hijo, 2, ',', '.') }} Bs</td>
+                    @php
+                        $totalAsignacionesFilaPdf = $detalle->sueldo_basico
+                            + $detalle->prima_profesionalizacion
+                            + $detalle->prima_antiguedad
+                            + $detalle->prima_por_hijo;
+                    @endphp
+                    @foreach($beneficios as $beneficio)
+                        @php
+                            $concepto = $detalle->conceptos
+                                ->where('tipo', 'asignacion')
+                                ->firstWhere('descripcion', $beneficio->beneficio);
+                            $monto = $concepto ? $concepto->monto : 0;
+                            $totalAsignacionesFilaPdf += $monto;
+                        @endphp
+                        <td class="text-right">{{ number_format($monto, 2, ',', '.') }} Bs</td>
+                    @endforeach
+                    <td class="text-right">{{ number_format($totalAsignacionesFilaPdf, 2, ',', '.') }} Bs</td>
                 </tr>
             @endforeach
 
+            @php
+                $totalSueldoBasicoPdf = $nomina->detalles->sum('sueldo_basico');
+                $totalPrimaProfPdf = $nomina->detalles->sum('prima_profesionalizacion');
+                $totalPrimaAntigPdf = $nomina->detalles->sum('prima_antiguedad');
+                $totalPrimaHijoPdf = $nomina->detalles->sum('prima_por_hijo');
+
+                $totalBeneficiosDinamicosPdf = 0;
+                foreach ($beneficios as $beneficioColPdf) {
+                    foreach ($nomina->detalles as $detalleTotalPdf) {
+                        $conceptoPdf = $detalleTotalPdf->conceptos
+                            ->where('tipo', 'asignacion')
+                            ->firstWhere('descripcion', $beneficioColPdf->beneficio);
+                        if ($conceptoPdf) {
+                            $totalBeneficiosDinamicosPdf += $conceptoPdf->monto;
+                        }
+                    }
+                }
+
+                $totalGeneralNominaOrdinariaPdf = $totalSueldoBasicoPdf
+                    + $totalPrimaProfPdf
+                    + $totalPrimaAntigPdf
+                    + $totalPrimaHijoPdf
+                    + $totalBeneficiosDinamicosPdf;
+            @endphp
+
             <tr class="totals-row">
-                <td colspan="2" class="text-right">TOTALES:</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('sueldo_basico'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('prima_profesionalizacion'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('prima_antiguedad'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('prima_por_hijo'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('comida'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('otras_primas'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('ret_ivss'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('ret_pie'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('ret_lph'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('ret_fpj'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('ordinaria'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('incentivo'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('feriado'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('gastos_representacion'), 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($nomina->detalles->sum('total'), 2, ',', '.') }}</td>
+                <td></td>
+                <td class="text-right">TOTALES:</td>
+                <td class="text-right">{{ number_format($totalSueldoBasicoPdf, 2, ',', '.') }} Bs</td>
+                <td class="text-right">{{ number_format($totalPrimaProfPdf, 2, ',', '.') }} Bs</td>
+                <td class="text-right">{{ number_format($totalPrimaAntigPdf, 2, ',', '.') }} Bs</td>
+                <td class="text-right">{{ number_format($totalPrimaHijoPdf, 2, ',', '.') }} Bs</td>
+                @foreach($beneficios as $beneficio)
+                    @php
+                        $totalBeneficioPdf = 0;
+                        foreach ($nomina->detalles as $detalleTotalBeneficioPdf) {
+                            $concepto = $detalleTotalBeneficioPdf->conceptos
+                                ->where('tipo', 'asignacion')
+                                ->firstWhere('descripcion', $beneficio->beneficio);
+                            if ($concepto) {
+                                $totalBeneficioPdf += $concepto->monto;
+                            }
+                        }
+                    @endphp
+                    <td class="text-right">{{ number_format($totalBeneficioPdf, 2, ',', '.') }} Bs</td>
+                @endforeach
+                <td class="text-right">{{ number_format($totalGeneralNominaOrdinariaPdf, 2, ',', '.') }} Bs</td>
             </tr>
         </tbody>
     </table>

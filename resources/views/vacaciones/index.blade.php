@@ -41,7 +41,10 @@
         </button>
 
         @if(auth()->user()->isAdmin())
-            <a href="{{ route('vacaciones.disfrute') }}" class="ml-auto px-4 py-2 rounded-lg border border-purple-400 bg-purple-50 text-purple-700 hover:bg-purple-100 transition inline-flex items-center">
+            <a href="{{ route('vacaciones.por_pagar') }}" class="ml-auto px-4 py-2 rounded-lg border border-green-400 bg-green-50 text-green-700 hover:bg-green-100 transition inline-flex items-center">
+                <i class="fas fa-money-bill-wave mr-2"></i> Vacaciones por Pagar
+            </a>
+            <a href="{{ route('vacaciones.disfrute') }}" class="px-4 py-2 rounded-lg border border-purple-400 bg-purple-50 text-purple-700 hover:bg-purple-100 transition inline-flex items-center">
                 <i class="fas fa-sun mr-2"></i> Vacaciones por Disfrute
             </a>
         @endif

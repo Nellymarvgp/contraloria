@@ -14,7 +14,13 @@ return new class extends Migration
         Schema::create('deducciones', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 100)->unique();
-            $table->text('descripcion')->nullable();
+            $table->string('tipo', 20)
+                ->default('deduccion')
+                ->comment('deduccion, beneficio, parametro');
+            $table->string('descripcion', 255)->nullable();
+            $table->string('campo', 20)
+                ->nullable()
+                ->comment('txt_1, txt_2, etc. (solo para tipo=parametro)');
             $table->decimal('porcentaje', 8, 2)->nullable();
             $table->boolean('es_fijo')->default(false);
             $table->decimal('monto_fijo', 10, 2)->nullable();

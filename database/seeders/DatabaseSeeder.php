@@ -13,10 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
+            AdminUserSeeder::class,
             NoticiaSeeder::class,
-            DeductionConfigSeeder::class,
-            BenefitConfigSeeder::class,
-            PayrollParameterSeeder::class,
         ]);
     }
 }

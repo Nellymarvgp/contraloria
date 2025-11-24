@@ -57,6 +57,9 @@
                         <a href="{{ route('prima-antiguedad.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('prima-antiguedad.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-hourglass mr-2"></i> Prima de Antigüedad
                         </a>
+                        <a href="{{ route('prima-hijo.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('prima-hijo.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-child mr-2"></i> Prima por Hijo
+                        </a>
                         <a href="{{ route('prima-profesionalizacion.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('prima-profesionalizacion.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-graduation-cap mr-2"></i> Prima de Profesionalización
                         </a>
@@ -86,11 +89,8 @@
                         <a href="{{ route('deducciones.index', ['tipo' => 'deduccion']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'deduccion') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-minus-circle mr-2"></i> Deducciones
                         </a>
-                        <a href="{{ route('deducciones.index', ['tipo' => 'beneficio']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'beneficio') ? 'bg-gray-700' : '' }}">
+                        <a href="{{ route('beneficios-cargo.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('beneficios-cargo.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-plus-circle mr-2"></i> Beneficios
-                        </a>
-                        <a href="{{ route('deducciones.index', ['tipo' => 'parametro']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'parametro') ? 'bg-gray-700' : '' }}">
-                            <i class="fas fa-sliders-h mr-2"></i> Parámetros
                         </a>
                     </div>
                 </div>

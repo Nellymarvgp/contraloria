@@ -11,15 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('grupo_cargos', function (Blueprint $table) {
+        Schema::create('beneficio_empleado', function (Blueprint $table) {
             $table->id();
-            $table->string('descripcion');
-            $table->enum('categoria', [
-                'administrativo_bachiller',
-                'tecnico_superior',
-                'profesional_universitario'
-            ])->nullable();
-            $table->boolean('estado')->default(true);
+            $table->foreignId('empleado_id')->constrained('empleados')->onDelete('cascade');
+            $table->foreignId('beneficio_id')->constrained('beneficios')->onDelete('cascade');
+            $table->decimal('valor_extra', 10, 2)->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('grupo_cargos');
+        Schema::dropIfExists('beneficio_empleado');
     }
 };

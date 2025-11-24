@@ -17,7 +17,7 @@
 </head>
 <body>
     @foreach($recibos as $recibo)
-        <img src="{{ public_path('logo.png') }}" class="logo" alt="Logo">
+        <img src="{{ public_path('images/logo.jpeg') }}" class="logo" alt="Logo">
         <div class="titulo">CONTRALORÍA DEL MUNICIPIO INDEPENDENCIA<br>RECIBO DE NÓMINA</div>
         <div class="datos">
             <b>Nómina:</b> {{ $recibo['nomina']->nombre }}<br>
@@ -42,8 +42,8 @@
                     <tr>
                         <td></td>
                         <td>{{ $concepto->descripcion }}</td>
-                        <td>{{ $concepto->tipo == 'asignacion' ? number_format($concepto->monto, 2) : '' }}</td>
-                        <td>{{ $concepto->tipo == 'deduccion' ? number_format($concepto->monto, 2) : '' }}</td>
+                        <td>{{ $concepto->tipo == 'asignacion' ? number_format($concepto->monto, 2) . ' Bs' : '' }}</td>
+                        <td>{{ $concepto->tipo == 'deduccion' ? number_format($concepto->monto, 2) . ' Bs' : '' }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -59,9 +59,9 @@
                 ->where('tipo','deduccion')
                 ->sum('monto')
         )
-        <b>Total Asignaciones:</b> {{ number_format($totalAsignaciones, 2) }}<br>
-        <b>Total Deducciones:</b> {{ number_format($totalDeducciones, 2) }}<br>
-        <b>Neto a Cobrar:</b> {{ number_format($totalAsignaciones - $totalDeducciones, 2) }}
+        <b>Total Asignaciones:</b> {{ number_format($totalAsignaciones, 2) }} Bs<br>
+        <b>Total Deducciones:</b> {{ number_format($totalDeducciones, 2) }} Bs<br>
+        <b>Neto a Cobrar:</b> {{ number_format($totalAsignaciones - $totalDeducciones, 2) }} Bs
         <div class="firma">
             <br><br>
             <div class="firma-linea">RECIBÍ CONFORME: _________________________</div>

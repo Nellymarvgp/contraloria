@@ -22,12 +22,14 @@ class Empleado extends Model
         'grupo_cargo_id',
         'tipo_cargo',
         'tiene_hijos',
-        'cantidad_hijos'
+        'cantidad_hijos',
+        'pvacaciones',
     ];
 
     protected $casts = [
         'fecha_ingreso' => 'date',
-        'salario' => 'decimal:2'
+        'salario' => 'decimal:2',
+        'pvacaciones' => 'boolean',
     ];
 
     public function user()
@@ -76,11 +78,12 @@ class Empleado extends Model
     }
 
     /**
-     * Beneficios personalizados asociados al empleado.
+     * Beneficios asociados al empleado (tabla beneficios + pivote beneficio_empleado).
      */
     public function beneficios()
     {
-        return $this->belongsToMany(\App\Models\Deduccion::class, 'empleado_beneficio', 'empleado_id', 'deduccion_id')->withPivot('valor_extra')->where('tipo', 'beneficio');
+        return $this->belongsToMany(\App\Models\Beneficio::class, 'beneficio_empleado', 'empleado_id', 'beneficio_id')
+            ->withPivot('valor_extra');
     }
 
     /**

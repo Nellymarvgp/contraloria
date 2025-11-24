@@ -8,6 +8,7 @@ use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\EstadoController;
 use App\Http\Controllers\PrimaAntiguedadController;
+use App\Http\Controllers\PrimaHijoController;
 use App\Http\Controllers\PrimaProfesionalizacionController;
 use App\Http\Controllers\NivelRangoController;
 use App\Http\Controllers\GrupoCargoController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\DeduccionController;
 use App\Http\Controllers\DeductionConfigController;
 use App\Http\Controllers\BenefitConfigController;
 use App\Http\Controllers\PayrollParameterController;
+use App\Http\Controllers\BeneficioCargoController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -56,13 +58,17 @@ Route::middleware('auth')->group(function () {
     // Rutas de recibos (disponibles para todos los usuarios autenticados)
     Route::get('recibos', [ReciboController::class, 'index'])->name('recibos.index');
     Route::get('recibos/{detalle}', [ReciboController::class, 'show'])->name('recibos.show');
+    Route::get('recibos/vacaciones/{pago}', [ReciboController::class, 'showVacaciones'])->name('recibos.vacaciones.show');
 
     // Rutas de vacaciones (disponibles para todos los usuarios autenticados)
     Route::get('vacaciones/disfrute', [VacacionController::class, 'disfruteResumen'])
         ->name('vacaciones.disfrute');
+    Route::get('vacaciones/por-pagar', [VacacionController::class, 'porPagar'])
+        ->name('vacaciones.por_pagar');
     Route::resource('vacaciones', VacacionController::class);
     Route::post('vacaciones/{vacacion}/aprobar', [VacacionController::class, 'aprobar'])->name('vacaciones.aprobar');
     Route::post('vacaciones/{vacacion}/rechazar', [VacacionController::class, 'rechazar'])->name('vacaciones.rechazar');
+    Route::post('vacaciones/pagar/{empleado}', [VacacionController::class, 'pagarPendiente'])->name('vacaciones.pagar_pendiente');
     
     // Rutas de administrador
     Route::middleware(\App\Http\Middleware\AdminMiddleware::class)->group(function () {
@@ -74,6 +80,7 @@ Route::middleware('auth')->group(function () {
         Route::get('empleados/antiguedad-pendiente', [EmpleadoController::class, 'antiguedadPendiente'])->name('empleados.antiguedad.pendiente');
         Route::post('empleados/{empleado}/actualizar-antiguedad', [EmpleadoController::class, 'actualizarAntiguedad'])->name('empleados.actualizar.antiguedad');
         Route::resource('empleados', EmpleadoController::class);
+Route::get('empleados/beneficios-por-cargo/{cargo}', [EmpleadoController::class, 'beneficiosPorCargo'])->name('empleados.beneficios-por-cargo');
         Route::get('empleados-import', [EmpleadoController::class, 'importForm'])->name('empleados.import.form');
         Route::post('empleados-import', [EmpleadoController::class, 'import'])->name('empleados.import');
         Route::resource('cargos', CargoController::class)->except(['show']);
@@ -83,6 +90,7 @@ Route::middleware('auth')->group(function () {
         
         // Rutas para primas y remuneraciones
         Route::resource('prima-antiguedad', PrimaAntiguedadController::class)->except(['show']);
+        Route::resource('prima-hijo', PrimaHijoController::class)->except(['show']);
         Route::resource('prima-profesionalizacion', PrimaProfesionalizacionController::class)->except(['show']);
         Route::resource('niveles-rangos', NivelRangoController::class)->except(['show']);
         Route::resource('grupos-cargos', GrupoCargoController::class)->except(['show']);
@@ -105,7 +113,17 @@ Route::middleware('auth')->group(function () {
         // Rutas para configuración de nóminas
         Route::resource('deduction-configs', DeductionConfigController::class);
         Route::resource('benefit-configs', BenefitConfigController::class);
-        Route::resource('payroll-parameters', PayrollParameterController::class);
+        Route::get('beneficios-cargo', [BeneficioCargoController::class, 'index'])->name('beneficios-cargo.index');
+        Route::get('beneficios-cargo/create', [BeneficioCargoController::class, 'create'])->name('beneficios-cargo.create');
+        Route::post('beneficios-cargo', [BeneficioCargoController::class, 'store'])->name('beneficios-cargo.store');
+        Route::get('beneficios-cargo/{beneficios_cargo}/edit', [BeneficioCargoController::class, 'edit'])->name('beneficios-cargo.edit');
+        Route::put('beneficios-cargo/{beneficios_cargo}', [BeneficioCargoController::class, 'update'])->name('beneficios-cargo.update');
+        Route::delete('beneficios-cargo/{beneficios_cargo}', [BeneficioCargoController::class, 'destroy'])->name('beneficios-cargo.destroy');
+
+        Route::post('beneficios', [BeneficioCargoController::class, 'storeBeneficio'])->name('beneficios.store');
+        Route::get('beneficios/{beneficio}/edit', [BeneficioCargoController::class, 'editBeneficio'])->name('beneficios.edit');
+        Route::put('beneficios/{beneficio}', [BeneficioCargoController::class, 'updateBeneficio'])->name('beneficios.update');
+        Route::delete('beneficios/{beneficio}', [BeneficioCargoController::class, 'destroyBeneficio'])->name('beneficios.destroy');
         
         // Ruta de prueba para solucionar el problema de los grupos de cargo
         Route::get('test-grupos', function() {
