@@ -16,7 +16,7 @@
     <a href="{{ route('nominas.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded flex items-center">
         <i class="fas fa-arrow-left mr-2"></i> Volver
     </a>
-    <a href="{{ route('nominas.exportPdf', $nomina) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center">
+    <a href="{{ route('nominas.exportPdf', $nomina) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center" target="_blank">
         <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
     </a>
     <a href="{{ route('nominas.descargar.recibos', $nomina->id) }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center" target="_blank">
@@ -358,11 +358,6 @@
                     </div>
                 </div>
                 
-                <div class="flex justify-end space-x-2">
-                    <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center" onclick="window.print()">
-                        <i class="fas fa-print mr-2"></i> Imprimir Nómina
-                    </button>
-                </div>
             @endif
         </div>
     </div>

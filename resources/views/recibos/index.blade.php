@@ -33,7 +33,7 @@
                                     {{ $detalle->nomina->fecha_inicio->format('d/m/Y') }} - {{ $detalle->nomina->fecha_fin->format('d/m/Y') }}
                                 </td>
                                 <td class="px-4 py-2 text-sm text-gray-700">
-                                    <a href="{{ route('recibos.show', $detalle) }}" class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700">
+                                    <a href="{{ route('recibos.show', $detalle) }}" class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700" target="_blank">
                                         <i class="fas fa-file-pdf mr-1"></i> Visualizar
                                     </a>
                                 </td>
@@ -68,7 +68,7 @@
                                 <td class="px-4 py-2 text-sm text-gray-700">{{ number_format($pago->monto, 2, ',', '.') }}</td>
                                 <td class="px-4 py-2 text-sm text-gray-700">{{ $pago->created_at->format('d/m/Y') }}</td>
                                 <td class="px-4 py-2 text-sm text-gray-700">
-                                    <a href="{{ route('recibos.vacaciones.show', $pago) }}" class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700">
+                                    <a href="{{ route('recibos.vacaciones.show', $pago) }}" class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700" target="_blank">
                                         <i class="fas fa-file-pdf mr-1"></i> Visualizar
                                     </a>
                                 </td>

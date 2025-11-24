@@ -333,7 +333,7 @@ class VacacionController extends Controller
 
         $filename = 'pago_vacaciones_' . $empleado->cedula . '_' . $year . '.pdf';
 
-        return $pdf->download($filename);
+        return $pdf->stream($filename);
     }
 
     /**

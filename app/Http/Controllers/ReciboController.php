@@ -61,7 +61,7 @@ class ReciboController extends Controller
         $pdf = Pdf::loadView('nominas.recibo', compact('recibos'))->setPaper('A4');
         $filename = 'recibo_nomina_' . $nomina->id . '_empleado_' . $empleadoModel->cedula . '.pdf';
 
-        return $pdf->download($filename);
+        return $pdf->stream($filename);
     }
 
     public function showVacaciones(PagoVacaciones $pago)
@@ -83,6 +83,6 @@ class ReciboController extends Controller
 
         $filename = 'pago_vacaciones_' . $empleadoModel->cedula . '_' . $year . '.pdf';
 
-        return $pdf->download($filename);
+        return $pdf->stream($filename);
     }
 }

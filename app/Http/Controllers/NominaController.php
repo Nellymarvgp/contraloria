@@ -197,7 +197,8 @@ class NominaController extends Controller
 
         $filename = 'nomina_ordinaria_' . $nomina->id . '.pdf';
 
-        return $pdf->download($filename);
+        // Mostrar en el navegador en lugar de descargar directamente
+        return $pdf->stream($filename);
     }
 
     /**
@@ -233,9 +234,11 @@ class NominaController extends Controller
         $pdf = Pdf::loadView('nominas.recibo', compact('recibos'))->setPaper('A4');
         $content = $pdf->output();
         $filename = 'recibos_nomina_' . $nomina->id . '.pdf';
+
+        // Enviar como inline para que el navegador lo abra en pestaña
         return response($content, 200, [
-            'Content-Type' => 'application/octet-stream',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }

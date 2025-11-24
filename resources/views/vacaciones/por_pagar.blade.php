@@ -104,7 +104,7 @@
             <button type="button" class="text-gray-500 hover:text-gray-700" @click="openModal = false">&times;</button>
         </div>
 
-        <form method="POST" x-ref="pagarForm">
+        <form method="POST" x-ref="pagarForm" target="_blank" @submit="openModal = false; setTimeout(() => window.location.reload(), 800)">
             @csrf
             <div class="space-y-4">
                 <div>
