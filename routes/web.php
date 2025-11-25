@@ -27,6 +27,8 @@ use App\Http\Controllers\NoticiaController;
 use App\Http\Controllers\NominaController;
 use App\Http\Controllers\VacacionController;
 use App\Http\Controllers\ReciboController;
+use App\Http\Controllers\AuthApiController;
+use App\Http\Controllers\ReciboApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -46,6 +48,27 @@ Route::middleware('guest')->group(function () {
     Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
     Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 });
+Route::prefix('api')->group(function () {
+        // Ruta de prueba mínima
+        Route::post('test-login', function (\Illuminate\Http\Request $request) {
+            return response()->json([
+                'ok' => true,
+                'data' => $request->all(),
+            ]);
+        });
+        Route::get('csrf-token', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'csrf_token' => csrf_token(),
+    ]);
+});
+        // Login API real
+        Route::post('login', [AuthApiController::class, 'login']);
+        // Rutas de recibos protegidas por auth
+        Route::middleware('auth')->group(function () {
+            Route::get('recibos/nomina', [ReciboApiController::class, 'nomina']);
+            Route::get('recibos/vacaciones', [ReciboApiController::class, 'vacaciones']);
+        });
+    });
 
 Route::post('logout', [LogoutController::class, '__invoke'])->name('logout');
 
@@ -80,7 +103,7 @@ Route::middleware('auth')->group(function () {
         Route::get('empleados/antiguedad-pendiente', [EmpleadoController::class, 'antiguedadPendiente'])->name('empleados.antiguedad.pendiente');
         Route::post('empleados/{empleado}/actualizar-antiguedad', [EmpleadoController::class, 'actualizarAntiguedad'])->name('empleados.actualizar.antiguedad');
         Route::resource('empleados', EmpleadoController::class);
-Route::get('empleados/beneficios-por-cargo/{cargo}', [EmpleadoController::class, 'beneficiosPorCargo'])->name('empleados.beneficios-por-cargo');
+        Route::get('empleados/beneficios-por-cargo/{cargo}', [EmpleadoController::class, 'beneficiosPorCargo'])->name('empleados.beneficios-por-cargo');
         Route::get('empleados-import', [EmpleadoController::class, 'importForm'])->name('empleados.import.form');
         Route::post('empleados-import', [EmpleadoController::class, 'import'])->name('empleados.import');
         Route::resource('cargos', CargoController::class)->except(['show']);
@@ -136,4 +159,6 @@ Route::get('empleados/beneficios-por-cargo/{cargo}', [EmpleadoController::class,
         // Ruta AJAX general para obtener remuneración por parámetros (incluye obreros)
         Route::get('remuneracion', [RemuneracionApiController::class, 'obtener'])->name('remuneracion.obtener');
     });
+    
 });
+
