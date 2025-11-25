@@ -32,7 +32,11 @@ use App\Http\Controllers\ReciboApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return "¡Hola! Laravel está funcionando correctamente.";
+    $noticias = \App\Models\Noticia::where('publicado', true)
+        ->orderBy('created_at', 'desc')
+        ->take(3)
+        ->get();
+    return view('landing', compact('noticias'));
 })->name('home');
 
 // Rutas de autenticación
