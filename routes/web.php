@@ -105,7 +105,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('empleados', EmpleadoController::class);
         Route::get('empleados/beneficios-por-cargo/{cargo}', [EmpleadoController::class, 'beneficiosPorCargo'])->name('empleados.beneficios-por-cargo');
         Route::get('empleados-import', [EmpleadoController::class, 'importForm'])->name('empleados.import.form');
-        Route::post('empleados-import', [EmpleadoController::class, 'import'])->name('empleados.import');
         Route::resource('cargos', CargoController::class)->except(['show']);
         Route::resource('departamentos', DepartamentoController::class)->except(['show']);
         Route::resource('horarios', HorarioController::class)->except(['show']);
