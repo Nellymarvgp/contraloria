@@ -40,7 +40,7 @@ class ReciboApiController extends Controller
         ]);
     }
 
-    public function recibo(Request $request, $id)
+    public function recibo(Request $request, $nominaId)
     {
         $user = $request->user();
 
@@ -134,6 +134,33 @@ class ReciboApiController extends Controller
 
         return response()->json([
             'data' => $data,
+        ]);
+    }
+    public function vacacionesDetalle(Request $request, $id)
+    {
+        // 1. Obtenemos el usuario autenticado
+        $user = $request->user();
+        
+        // 2. Buscamos el empleado correspondiente
+        $empleado = Empleado::where('cedula', $user->cedula)->first();
+
+        if (!$empleado) {
+            return response()->json(['data' => null], 404);
+        }
+
+        // 3. Buscamos el pago de vacaciones específico para ese empleado
+        $pago = PagoVacaciones::where('empleado_id', $empleado->id)
+                              ->where('id', $id)
+                              ->first();
+
+        // Si no se encuentra el pago, devolvemos un 404
+        if (!$pago) {
+            return response()->json(['data' => null], 404);
+        }
+
+        // 4. Devolvemos los datos del pago
+        return response()->json([
+            'data' => $pago,
         ]);
     }
 }

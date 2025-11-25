@@ -65,6 +65,9 @@ Route::prefix('api')->group(function () {
         Route::post('login', [AuthApiController::class, 'login']);
         // Rutas de recibos protegidas por auth
         Route::middleware('auth')->group(function () {
+            Route::get('recibos/vacaciones/{id}', [ReciboApiController::class, 'vacacionesDetalle']);
+            Route::get('recibos/vacaciones/{pago}', [ReciboController::class, 'showVacaciones'])->name('recibos.vacaciones.show');
+            Route::get('recibos/nomina/{nominaId}', [ReciboApiController::class, 'recibo']);
             Route::get('recibos/nomina', [ReciboApiController::class, 'nomina']);
             Route::get('recibos/vacaciones', [ReciboApiController::class, 'vacaciones']);
         });
