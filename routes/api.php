@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('recibos/nomina/{id}', [ReciboApiController::class, 'recibo']);
     Route::get('recibos/nomina', [ReciboApiController::class, 'nomina']);
     Route::get('recibos/vacaciones', [ReciboApiController::class, 'vacaciones']);
-    //Route::get('recibos', [ReciboApiController::class, 'index']);
+    Route::get('recibos', [ReciboApiController::class, 'index']);
     //Route::get('recibos/{id}', [ReciboApiController::class, 'show']);
     //Route::post('recibos', [ReciboApiController::class, 'store']);
     //Route::put('recibos/{id}', [ReciboApiController::class, 'update']);
