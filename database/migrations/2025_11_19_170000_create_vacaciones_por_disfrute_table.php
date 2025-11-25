@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('remuneracions', function (Blueprint $table) {
-            $table->dropColumn(['valor_minimo', 'valor_maximo']);
+        Schema::create('vacaciones_por_disfrute', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('empleado_id')->constrained('empleados')->onDelete('cascade');
+            $table->integer('dias_por_disfrute');
+            $table->timestamps();
         });
     }
 
@@ -21,9 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('remuneracions', function (Blueprint $table) {
-            $table->decimal('valor_minimo', 10, 2)->nullable();
-            $table->decimal('valor_maximo', 10, 2)->nullable();
-        });
+        Schema::dropIfExists('vacaciones_por_disfrute');
     }
 };

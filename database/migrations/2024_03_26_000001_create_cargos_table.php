@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->text('descripcion')->nullable();
+            $table->string('tipo_cargo')->nullable();
             $table->timestamps();
         });
     }

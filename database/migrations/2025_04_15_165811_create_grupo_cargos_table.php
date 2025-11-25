@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('grupo_cargos', function (Blueprint $table) {
             $table->id();
             $table->string('descripcion');
+            $table->enum('categoria', [
+                'administrativo_bachiller',
+                'tecnico_superior',
+                'profesional_universitario'
+            ])->nullable();
             $table->boolean('estado')->default(true);
             $table->timestamps();
         });

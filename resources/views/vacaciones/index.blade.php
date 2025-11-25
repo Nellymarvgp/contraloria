@@ -26,7 +26,7 @@
 </div>
 
     <!-- Filtros por estado -->
-    <div class="mb-6 flex gap-4" x-data="{ estado: 'todas' }">
+    <div class="mb-6 flex gap-4 items-center" x-data="{ estado: 'todas' }">
         <button @click="estado = 'todas'" :class="estado === 'todas' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-blue-50 transition">
             <i class="fas fa-list mr-2"></i>Todas
         </button>
@@ -39,6 +39,15 @@
         <button @click="estado = 'rechazada'" :class="estado === 'rechazada' ? 'bg-red-600 text-white' : 'bg-white text-gray-700'" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-red-50 transition">
             <i class="fas fa-times-circle mr-2"></i>Rechazadas
         </button>
+
+        @if(auth()->user()->isAdmin())
+            <a href="{{ route('vacaciones.por_pagar') }}" class="ml-auto px-4 py-2 rounded-lg border border-green-400 bg-green-50 text-green-700 hover:bg-green-100 transition inline-flex items-center">
+                <i class="fas fa-money-bill-wave mr-2"></i> Vacaciones por Pagar
+            </a>
+            <a href="{{ route('vacaciones.disfrute') }}" class="px-4 py-2 rounded-lg border border-purple-400 bg-purple-50 text-purple-700 hover:bg-purple-100 transition inline-flex items-center">
+                <i class="fas fa-sun mr-2"></i> Vacaciones por Disfrute
+            </a>
+        @endif
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -113,9 +122,29 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex gap-2">
-                            <a href="{{ route('vacaciones.show', $vacacion) }}" class="text-blue-600 hover:text-blue-900" title="Ver detalles">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                            @if(auth()->user()->isAdmin())
+                                <button
+                                    type="button"
+                                    class="text-blue-600 hover:text-blue-900"
+                                    title="Ver detalles"
+                                    data-id="{{ $vacacion->id }}"
+                                    data-empleado="{{ optional(optional($vacacion->empleado)->user)->nombre && optional(optional($vacacion->empleado)->user)->apellido ? optional($vacacion->empleado->user)->nombre . ' ' . optional($vacacion->empleado->user)->apellido : ('Empleado CI: ' . ($vacacion->empleado->cedula ?? 'N/A')) }}"
+                                    data-departamento="{{ optional(optional($vacacion->empleado)->departamento)->nombre ?? 'N/A' }}"
+                                    data-cargo="{{ optional(optional($vacacion->empleado)->cargo)->nombre ?? 'N/A' }}"
+                                    data-fecha-inicio="{{ $vacacion->fecha_inicio ? $vacacion->fecha_inicio->format('d/m/Y') : 'N/A' }}"
+                                    data-fecha-fin="{{ $vacacion->fecha_fin ? $vacacion->fecha_fin->format('d/m/Y') : 'N/A' }}"
+                                    data-dias="{{ $vacacion->dias_solicitados }}"
+                                    data-descripcion="{{ e($vacacion->motivo ?? 'Sin descripción') }}"
+                                    data-estado="{{ $vacacion->estado }}"
+                                    onclick="openDetailsModal(this)"
+                                >
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            @else
+                                <a href="{{ route('vacaciones.show', $vacacion) }}" class="text-blue-600 hover:text-blue-900" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            @endif
                             
                             @if($vacacion->estado === 'pendiente')
                                 @if(auth()->user()->isAdmin())
@@ -157,7 +186,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form method="POST" id="approveForm" data-action="{{ route('vacaciones.aprobar', ['__ID__']) }}">
+            <form method="POST" id="approveForm" data-action="{{ route('vacaciones.aprobar', ['vacacion' => '__ID__']) }}">
                 @csrf
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
@@ -187,7 +216,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form method="POST" id="rejectForm" data-action="{{ route('vacaciones.rechazar', ['__ID__']) }}">
+            <form method="POST" id="rejectForm" data-action="{{ route('vacaciones.rechazar', ['vacacion' => '__ID__']) }}">
                 @csrf
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
@@ -203,6 +232,59 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalle de Solicitud -->
+<div id="detailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Detalle de Solicitud de Vacaciones</h3>
+                <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 mb-4 text-sm text-gray-800">
+                <div>
+                    <span class="font-semibold">Empleado:</span>
+                    <span id="detailsEmpleado"></span>
+                </div>
+                <div>
+                    <span class="font-semibold">Departamento:</span>
+                    <span id="detailsDepartamento"></span>
+                </div>
+                <div>
+                    <span class="font-semibold">Cargo:</span>
+                    <span id="detailsCargo"></span>
+                </div>
+                <div>
+                    <span class="font-semibold">Intervalo de Fechas:</span>
+                    <span id="detailsFechas"></span>
+                </div>
+                <div>
+                    <span class="font-semibold">Días:</span>
+                    <span id="detailsDias"></span>
+                </div>
+                <div>
+                    <span class="font-semibold">Descripción:</span>
+                    <p id="detailsDescripcion" class="mt-1 whitespace-pre-line"></p>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" id="detailsApproveBtn" onclick="approveFromDetails()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    <i class="fas fa-check mr-2"></i>Aprobar
+                </button>
+                <button type="button" id="detailsRejectBtn" onclick="rejectFromDetails()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    <i class="fas fa-times mr-2"></i>Rechazar
+                </button>
+                <button type="button" onclick="closeDetailsModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                    Cerrar
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -242,6 +324,60 @@ function openRejectModal(id) {
 
 function closeRejectModal() {
     document.getElementById('rejectModal').classList.add('hidden');
+}
+
+// Modal de Detalle
+function openDetailsModal(button) {
+    const modal = document.getElementById('detailsModal');
+    modal.dataset.id = button.dataset.id;
+    const estado = button.dataset.estado || 'pendiente';
+
+    document.getElementById('detailsEmpleado').textContent = button.dataset.empleado || 'N/A';
+    document.getElementById('detailsDepartamento').textContent = button.dataset.departamento || 'N/A';
+    document.getElementById('detailsCargo').textContent = button.dataset.cargo || 'N/A';
+    document.getElementById('detailsFechas').textContent = (button.dataset.fechaInicio || 'N/A') + ' al ' + (button.dataset.fechaFin || 'N/A');
+    document.getElementById('detailsDias').textContent = button.dataset.dias ? (button.dataset.dias + ' días') : 'N/A';
+    document.getElementById('detailsDescripcion').textContent = button.dataset.descripcion || 'Sin descripción';
+
+    // Habilitar o deshabilitar botones según estado
+    const approveBtn = document.getElementById('detailsApproveBtn');
+    const rejectBtn = document.getElementById('detailsRejectBtn');
+
+    const isPendiente = estado === 'pendiente';
+
+    [approveBtn, rejectBtn].forEach(btn => {
+        if (!btn) return;
+        btn.disabled = !isPendiente;
+        if (isPendiente) {
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    });
+
+    modal.classList.remove('hidden');
+}
+
+function closeDetailsModal() {
+    document.getElementById('detailsModal').classList.add('hidden');
+}
+
+function approveFromDetails() {
+    const modal = document.getElementById('detailsModal');
+    const id = modal.dataset.id;
+    closeDetailsModal();
+    if (id) {
+        openApproveModal(id);
+    }
+}
+
+function rejectFromDetails() {
+    const modal = document.getElementById('detailsModal');
+    const id = modal.dataset.id;
+    closeDetailsModal();
+    if (id) {
+        openRejectModal(id);
+    }
 }
 </script>
 @endpush

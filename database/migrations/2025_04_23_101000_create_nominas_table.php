@@ -16,6 +16,7 @@ return new class extends Migration
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
             $table->string('descripcion');
+            $table->string('despacho')->nullable();
             $table->enum('estado', ['borrador', 'aprobada', 'pagada'])->default('borrador');
             $table->decimal('total_monto', 12, 2)->default(0);
             $table->timestamps();

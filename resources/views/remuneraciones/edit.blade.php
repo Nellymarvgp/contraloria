@@ -150,8 +150,27 @@
             <script>
                 function toggleFields() {
                     var tipo = document.getElementById('tipo_personal').value;
-                    document.getElementById('funcionarios_fields').style.display = tipo === 'administracion_publica' ? '' : 'none';
-                    document.getElementById('obrero_fields').style.display = tipo === 'obreros' ? '' : 'none';
+                    var funcFields = document.getElementById('funcionarios_fields');
+                    var obreroFields = document.getElementById('obrero_fields');
+                    var valorFunc = document.getElementById('valor');
+                    var valorObrero = document.getElementById('valor_obrero');
+
+                    if (tipo === 'administracion_publica') {
+                        funcFields.style.display = '';
+                        obreroFields.style.display = 'none';
+                        if (valorFunc) valorFunc.disabled = false;
+                        if (valorObrero) valorObrero.disabled = true;
+                    } else if (tipo === 'obreros') {
+                        funcFields.style.display = 'none';
+                        obreroFields.style.display = '';
+                        if (valorFunc) valorFunc.disabled = true;
+                        if (valorObrero) valorObrero.disabled = false;
+                    } else {
+                        funcFields.style.display = 'none';
+                        obreroFields.style.display = 'none';
+                        if (valorFunc) valorFunc.disabled = true;
+                        if (valorObrero) valorObrero.disabled = true;
+                    }
                 }
                 document.getElementById('tipo_personal').addEventListener('change', toggleFields);
                 window.onload = toggleFields;

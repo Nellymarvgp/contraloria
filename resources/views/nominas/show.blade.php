@@ -16,7 +16,7 @@
     <a href="{{ route('nominas.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded flex items-center">
         <i class="fas fa-arrow-left mr-2"></i> Volver
     </a>
-    <a href="{{ route('nominas.exportPdf', $nomina) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center">
+    <a href="{{ route('nominas.exportPdf', $nomina) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center" target="_blank">
         <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
     </a>
     <a href="{{ route('nominas.descargar.recibos', $nomina->id) }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center" target="_blank">
@@ -74,6 +74,30 @@
                 <h3 class="text-lg font-medium text-gray-900">Información General</h3>
             </div>
             <div class="p-4">
+                @php
+                    // Calcular el mismo total general de asignaciones que en la fila TOTAL de la tabla NÓMINA ORDINARIA
+                    $totalSueldoBasicoInfo = $nomina->detalles->sum('sueldo_basico');
+                    $totalPrimaProfInfo = $nomina->detalles->sum('prima_profesionalizacion');
+                    $totalPrimaAntigInfo = $nomina->detalles->sum('prima_antiguedad');
+                    $totalPrimaHijoInfo = $nomina->detalles->sum('prima_por_hijo');
+
+                    $totalBeneficiosDinamicosInfo = 0;
+                    if (isset($beneficios)) {
+                        foreach ($beneficios as $beneficioColInfo) {
+                            foreach ($nomina->detalles as $detalleInfo) {
+                                $conceptoInfo = $detalleInfo->conceptos
+                                    ->where('tipo', 'asignacion')
+                                    ->firstWhere('descripcion', $beneficioColInfo->beneficio);
+                                if ($conceptoInfo) {
+                                    $totalBeneficiosDinamicosInfo += $conceptoInfo->monto;
+                                }
+                            }
+                        }
+                    }
+
+                    $totalGeneralAsignacionesInfo = $totalSueldoBasicoInfo + $totalPrimaProfInfo + $totalPrimaAntigInfo + $totalPrimaHijoInfo + $totalBeneficiosDinamicosInfo;
+                @endphp
+
                 <table class="min-w-full">
                     <tr class="border-b">
                         <th class="py-2 text-left text-sm font-medium text-gray-700 w-2/5">ID:</th>
@@ -105,7 +129,7 @@
                     </tr>
                     <tr>
                         <th class="py-2 text-left text-sm font-medium text-gray-700">Total:</th>
-                        <td class="py-2 text-sm font-bold text-gray-900">{{ number_format($nomina->total_monto, 2, ',', '.') }}</td>
+                        <td class="py-2 text-sm font-bold text-gray-900">{{ number_format($totalGeneralAsignacionesInfo, 2, ',', '.') }}</td>
                     </tr>
                 </table>
             </div>
@@ -143,6 +167,41 @@
                 <h3 class="text-lg font-medium text-gray-900">Resumen</h3>
             </div>
             <div class="p-4">
+                @php
+                    // Reutilizar la misma lógica de totales de NÓMINA ORDINARIA para que no haya diferencias
+                    $totalSueldoBasicoResumen = $nomina->detalles->sum('sueldo_basico');
+                    $totalPrimaProfResumen = $nomina->detalles->sum('prima_profesionalizacion');
+                    $totalPrimaAntigResumen = $nomina->detalles->sum('prima_antiguedad');
+                    $totalPrimaHijoResumen = $nomina->detalles->sum('prima_por_hijo');
+
+                    $totalBeneficiosDinamicosResumen = 0;
+                    if (isset($beneficios)) {
+                        foreach ($beneficios as $beneficioColResumen) {
+                            foreach ($nomina->detalles as $detalleResumen) {
+                                $conceptoResumen = $detalleResumen->conceptos
+                                    ->where('tipo', 'asignacion')
+                                    ->firstWhere('descripcion', $beneficioColResumen->beneficio);
+                                if ($conceptoResumen) {
+                                    $totalBeneficiosDinamicosResumen += $conceptoResumen->monto;
+                                }
+                            }
+                        }
+                    }
+
+                    // Total de asignaciones = mismo total que la columna TOTAL de la fila de totales
+                    $totalAsignacionesResumen = $totalSueldoBasicoResumen + $totalPrimaProfResumen + $totalPrimaAntigResumen + $totalPrimaHijoResumen + $totalBeneficiosDinamicosResumen;
+
+                    // Total de deducciones basado en conceptos
+                    $totalDeduccionesResumen = 0;
+                    foreach ($nomina->detalles as $detalleResumen) {
+                        $totalDeduccionesResumen += $detalleResumen->conceptos
+                            ->where('tipo', 'deduccion')
+                            ->sum('monto');
+                    }
+
+                    $totalNetoResumen = $totalAsignacionesResumen - $totalDeduccionesResumen;
+                @endphp
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div class="bg-gray-50 rounded-lg p-4 text-center border">
                         <h4 class="text-sm font-medium text-gray-700 mb-2">Total Empleados</h4>
@@ -150,18 +209,18 @@
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4 text-center border">
                         <h4 class="text-sm font-medium text-gray-700 mb-2">Total Asignaciones</h4>
-                        <p class="text-2xl font-bold text-gray-900">{{ number_format($nomina->detalles->sum('total'), 2, ',', '.') }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ number_format($totalAsignacionesResumen, 2, ',', '.') }}</p>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4 text-center border">
                         <h4 class="text-sm font-medium text-gray-700 mb-2">Total Deducciones</h4>
-                        <p class="text-2xl font-bold text-gray-900">{{ number_format($nomina->detalles->sum('ret_ivss') + $nomina->detalles->sum('ret_pie') + $nomina->detalles->sum('ret_lph') + $nomina->detalles->sum('ret_fpj'), 2, ',', '.') }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ number_format($totalDeduccionesResumen, 2, ',', '.') }}</p>
                     </div>
                 </div>
                 
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div class="flex justify-between items-center">
                         <span class="text-lg font-medium text-blue-800">Total Neto a Pagar:</span>
-                        <span class="text-2xl font-bold text-blue-800">{{ number_format($nomina->total_monto, 2, ',', '.') }}</span>
+                        <span class="text-2xl font-bold text-blue-800">{{ number_format($totalNetoResumen, 2, ',', '.') }}</span>
                     </div>
                 </div>
             </div>
@@ -198,121 +257,107 @@
                         <table class="min-w-full divide-y divide-gray-200 border">
                             <thead>
                                 <tr class="bg-green-100">
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">NOMBRE(S) Y APELLIDO(S)</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">N° DE<br>CÉDULA</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">SUELDO<br>BÁSICO</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">PRIMA DE<br>PROFESIO<br>NALIZACIÓN</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">PRIMA<br>DE<br>ANTIGÜEDAD</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">PRIMA<br>POR HIJO</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">Comida</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">Otras<br>primas</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">RET IVSS</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">RET PIE</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">RET LPH</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">RET FPJ</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">ORDINARIA</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">INCENTIVO</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">FERIADO</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">GASTOS DE<br>REPRESENT<br>ACION</th>
-                                    <th rowspan="2" class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">TOTAL</th>
+                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">N° DE CÉDULA</th>
+                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">NOMBRE(S) Y APELLIDO(S)</th>
+                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">SUELDO BÁSICO</th>
+                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">PRIMA PROF.</th>
+                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">PRIMA ANTIG.</th>
+                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">PRIMA POR HIJO</th>
+                                    @foreach($beneficios as $beneficio)
+                                        <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">{{ $beneficio->beneficio }}</th>
+                                    @endforeach
+                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border align-middle">TOTAL</th>
                                 </tr>
-                                <tr class="bg-green-100"></tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($nomina->detalles as $index => $detalle)
                                     <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100 cursor-pointer" onclick="openModal({{ $detalle->id }})">
-                                        <td class="px-3 py-2 text-sm text-gray-900 border">{{ $detalle->empleado->user->name ?? 'N/A' }}</td>
                                         <td class="px-3 py-2 text-sm text-gray-900 text-center border">{{ $detalle->empleado->cedula }}</td>
+                                        <td class="px-3 py-2 text-sm text-gray-900 border">{{ $detalle->empleado->user->nombre ?? 'N/A' }} {{ $detalle->empleado->user->apellido ?? 'N/A' }}</td>
                                         <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->sueldo_basico, 2, '.', ',') }}</td>
                                         <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->prima_profesionalizacion, 2, '.', ',') }}</td>
                                         <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->prima_antiguedad, 2, '.', ',') }}</td>
                                         <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->prima_por_hijo, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->comida, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->otras_primas, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->ret_ivss, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->ret_pie, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->ret_lph, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->ret_fpj, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->ordinaria, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->incentivo, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->feriado, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->gastos_representacion, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm font-bold text-gray-900 text-right border bg-yellow-50">{{ number_format($detalle->total, 2, '.', ',') }}</td>
+                                        @php
+                                            $totalAsignacionesFila = $detalle->sueldo_basico
+                                                + $detalle->prima_profesionalizacion
+                                                + $detalle->prima_antiguedad
+                                                + $detalle->prima_por_hijo;
+                                        @endphp
+                                        @foreach($beneficios as $beneficio)
+                                            @php
+                                                $concepto = $detalle->conceptos
+                                                    ->where('tipo', 'asignacion')
+                                                    ->firstWhere('descripcion', $beneficio->beneficio);
+                                                $monto = $concepto ? $concepto->monto : 0;
+                                                $totalAsignacionesFila += $monto;
+                                            @endphp
+                                            <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($monto, 2, '.', ',') }}</td>
+                                        @endforeach
+                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($totalAsignacionesFila, 2, '.', ',') }}</td>
                                     </tr>
                                 @endforeach
                                 <!-- Total row -->
                                 <tr class="bg-gray-100 font-bold">
-                                    <td colspan="2" class="px-3 py-2 text-sm text-right border">TOTALES:</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('sueldo_basico'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('prima_profesionalizacion'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('prima_antiguedad'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('prima_por_hijo'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('comida'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('otras_primas'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('ret_ivss'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('ret_pie'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('ret_lph'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('ret_fpj'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('ordinaria'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('incentivo'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('feriado'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($nomina->detalles->sum('gastos_representacion'), 2, '.', ',') }}</td>
-                                    <td class="px-3 py-2 text-sm text-right border bg-yellow-100">{{ number_format($nomina->detalles->sum('total'), 2, '.', ',') }}</td>
+                                    @php
+                                        $totalSueldoBasico = $nomina->detalles->sum('sueldo_basico');
+                                        $totalPrimaProf = $nomina->detalles->sum('prima_profesionalizacion');
+                                        $totalPrimaAntig = $nomina->detalles->sum('prima_antiguedad');
+                                        $totalPrimaHijo = $nomina->detalles->sum('prima_por_hijo');
+
+                                        // Sumar solo los beneficios dinámicos (columnas variables),
+                                        // sin volver a sumar sueldo ni primas que ya tienen su propia columna.
+                                        $totalBeneficiosDinamicos = 0;
+                                        foreach ($beneficios as $beneficioCol) {
+                                            foreach ($nomina->detalles as $detalleTotal) {
+                                                $concepto = $detalleTotal->conceptos
+                                                    ->where('tipo', 'asignacion')
+                                                    ->firstWhere('descripcion', $beneficioCol->beneficio);
+                                                if ($concepto) {
+                                                    $totalBeneficiosDinamicos += $concepto->monto;
+                                                }
+                                            }
+                                        }
+
+                                        // TOTAL general de la fila de totales = sueldo básico + primas + beneficios dinámicos
+                                        $totalGeneralNominaOrdinaria = $totalSueldoBasico + $totalPrimaProf + $totalPrimaAntig + $totalPrimaHijo + $totalBeneficiosDinamicos;
+                                    @endphp
+
+                                    <!-- Cédula (vacía en totales) -->
+                                    <td class="px-3 py-2 text-sm text-right border"></td>
+                                    <!-- Nombre (texto TOTALES) -->
+                                    <td class="px-3 py-2 text-sm text-right border">TOTALES:</td>
+                                    <!-- Sueldo básico total -->
+                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($totalSueldoBasico, 2, '.', ',') }}</td>
+                                    <!-- Primas totales -->
+                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($totalPrimaProf, 2, '.', ',') }}</td>
+                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($totalPrimaAntig, 2, '.', ',') }}</td>
+                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($totalPrimaHijo, 2, '.', ',') }}</td>
+
+                                    <!-- Totales por cada beneficio dinámico -->
+                                    @foreach($beneficios as $beneficio)
+                                        @php
+                                            $totalBeneficio = 0;
+                                            foreach ($nomina->detalles as $detalle) {
+                                                $concepto = $detalle->conceptos
+                                                    ->where('tipo', 'asignacion')
+                                                    ->firstWhere('descripcion', $beneficio->beneficio);
+                                                if ($concepto) {
+                                                    $totalBeneficio += $concepto->monto;
+                                                }
+                                            }
+                                        @endphp
+                                        <td class="px-3 py-2 text-sm text-right border">{{ number_format($totalBeneficio, 2, '.', ',') }}</td>
+                                    @endforeach
+
+                                    <!-- Total general (sueldo + primas + bonificaciones) -->
+                                    <td class="px-3 py-2 text-sm text-right border">{{ number_format($totalGeneralNominaOrdinaria, 2, '.', ',') }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
                 
-                <!-- TXT Fields Table -->
-                <div class="mb-6">
-                    <div class="bg-gray-700 text-white px-4 py-3 text-center">
-                        <h2 class="text-lg font-bold">CAMPOS ADICIONALES</h2>
-                    </div>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 border">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 1</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 2</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 3</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 4</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 5</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 6</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 7</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 8</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 9</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TXT 10</th>
-                                    <th class="px-3 py-2 text-xs font-medium text-gray-700 uppercase tracking-wider text-center border">TOTAL</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($nomina->detalles as $index => $detalle)
-                                    <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100">
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_1, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_2, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_3, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_4, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_5, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_6, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_7, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_8, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_9, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm text-gray-900 text-right border">{{ number_format($detalle->txt_10, 2, '.', ',') }}</td>
-                                        <td class="px-3 py-2 text-sm font-bold text-gray-900 text-right border">{{ number_format($detalle->total, 2, '.', ',') }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div class="flex justify-end space-x-2">
-                    <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center" onclick="window.print()">
-                        <i class="fas fa-print mr-2"></i> Imprimir Nómina
-                    </button>
-                </div>
             @endif
         </div>
     </div>
@@ -367,76 +412,31 @@
                         </div>
 
                         <h4 class="text-base font-semibold text-gray-900 mb-3 border-b pb-2">Detalle de Valores</h4>
+                        @php
+                            $conceptosAsignacion = $detalle->conceptos->where('tipo', 'asignacion');
+                            $totalAsignacionesModal = $conceptosAsignacion->sum('monto');
+                        @endphp
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 border">
                                 <thead class="bg-gray-100">
                                     <tr>
-                                        <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Concepto</th>
-                                        <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Valor</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Concepto</th>
+                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">Asignación</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Sueldo Básico</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->sueldo_basico, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Prima de Profesionalización</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->prima_profesionalizacion, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Prima de Antigüedad</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->prima_antiguedad, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Prima por Hijo</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->prima_por_hijo, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Comida</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->comida, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Otras Primas</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->otras_primas, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="bg-red-50 hover:bg-red-100">
-                                        <td class="px-4 py-2 text-sm text-red-700">Retención IVSS</td>
-                                        <td class="px-4 py-2 text-sm text-red-700 text-right">{{ number_format($detalle->ret_ivss, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="bg-red-50 hover:bg-red-100">
-                                        <td class="px-4 py-2 text-sm text-red-700">Retención PIE</td>
-                                        <td class="px-4 py-2 text-sm text-red-700 text-right">{{ number_format($detalle->ret_pie, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="bg-red-50 hover:bg-red-100">
-                                        <td class="px-4 py-2 text-sm text-red-700">Retención LPH</td>
-                                        <td class="px-4 py-2 text-sm text-red-700 text-right">{{ number_format($detalle->ret_lph, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="bg-red-50 hover:bg-red-100">
-                                        <td class="px-4 py-2 text-sm text-red-700">Retención FPJ</td>
-                                        <td class="px-4 py-2 text-sm text-red-700 text-right">{{ number_format($detalle->ret_fpj, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Ordinaria</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->ordinaria, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Incentivo</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->incentivo, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Feriado</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->feriado, 2, ',', '.') }}</td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-2 text-sm text-gray-900">Gastos de Representación</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->gastos_representacion, 2, ',', '.') }}</td>
-                                    </tr>
+                                    {{-- Asignaciones (incluye sueldo, primas y beneficios dinámicos) --}}
+                                    @foreach($conceptosAsignacion as $concepto)
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-2 text-sm text-gray-900">{{ $concepto->descripcion }}</td>
+                                            <td class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($concepto->monto, 2, ',', '.') }}</td>
+                                        </tr>
+                                    @endforeach
                                 </tbody>
                                 <tfoot>
                                     <tr class="bg-gray-100 font-semibold">
-                                        <th class="px-4 py-2 text-sm text-gray-900 text-right">Total:</th>
-                                        <th class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($detalle->total, 2, ',', '.') }}</th>
+                                        <th class="px-4 py-2 text-sm text-gray-900 text-right">Total Asignaciones:</th>
+                                        <th class="px-4 py-2 text-sm text-gray-900 text-right">{{ number_format($totalAsignacionesModal, 2, ',', '.') }}</th>
                                     </tr>
                                 </tfoot>
                             </table>

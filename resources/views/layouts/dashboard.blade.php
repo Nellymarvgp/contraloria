@@ -24,7 +24,7 @@
         <!-- Sidebar -->
         <div :class="{'hidden': !sidebarOpen}" class="md:block bg-gray-800 text-white w-full md:w-64 py-4 flex-shrink-0">
             <div class="px-4">
-                <h1 class="text-2xl font-bold mb-8">SisNómina</h1>
+                <h1 class="text-2xl font-bold mb-8">SITNO</h1>
             </div>
             <nav class="mt-4">
                 <a href="{{ route('dashboard') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('dashboard') ? 'bg-gray-700' : '' }}">
@@ -57,6 +57,9 @@
                         <a href="{{ route('prima-antiguedad.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('prima-antiguedad.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-hourglass mr-2"></i> Prima de Antigüedad
                         </a>
+                        <a href="{{ route('prima-hijo.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('prima-hijo.*') ? 'bg-gray-700' : '' }}">
+                            <i class="fas fa-child mr-2"></i> Prima por Hijo
+                        </a>
                         <a href="{{ route('prima-profesionalizacion.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('prima-profesionalizacion.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-graduation-cap mr-2"></i> Prima de Profesionalización
                         </a>
@@ -86,11 +89,8 @@
                         <a href="{{ route('deducciones.index', ['tipo' => 'deduccion']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'deduccion') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-minus-circle mr-2"></i> Deducciones
                         </a>
-                        <a href="{{ route('deducciones.index', ['tipo' => 'beneficio']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'beneficio') ? 'bg-gray-700' : '' }}">
+                        <a href="{{ route('beneficios-cargo.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('beneficios-cargo.*') ? 'bg-gray-700' : '' }}">
                             <i class="fas fa-plus-circle mr-2"></i> Beneficios
-                        </a>
-                        <a href="{{ route('deducciones.index', ['tipo' => 'parametro']) }}" class="block px-4 py-2 hover:bg-gray-700 {{ (request()->routeIs('deducciones.*') && request()->query('tipo') === 'parametro') ? 'bg-gray-700' : '' }}">
-                            <i class="fas fa-sliders-h mr-2"></i> Parámetros
                         </a>
                     </div>
                 </div>
@@ -99,10 +99,12 @@
                 </a>
                 
                
-                <a href="#" class="block px-4 py-2 hover:bg-gray-700">
-                    <i class="fas fa-chart-bar mr-2"></i> Reportes
-                </a>
                 @endif
+
+                <!-- Recibos (disponible para todos los usuarios autenticados) -->
+                <a href="{{ route('recibos.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('recibos.*') ? 'bg-gray-700' : '' }}">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i> Recibos
+                </a>
                 
                 <!-- Vacaciones (disponible para todos) -->
                 <a href="{{ route('vacaciones.index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ request()->routeIs('vacaciones.*') ? 'bg-gray-700' : '' }}">

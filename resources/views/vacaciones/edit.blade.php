@@ -140,13 +140,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (fechaInicio.value && fechaFin.value) {
             const inicio = new Date(fechaInicio.value);
             const fin = new Date(fechaFin.value);
-            
-            if (fin > inicio) {
-                const diffTime = Math.abs(fin - inicio);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                
-                diasCount.textContent = diffDays;
-                diasCounter.classList.remove('hidden');
+
+            if (fin >= inicio) {
+                let diasHabiles = 0;
+                let cursor = new Date(inicio.getTime());
+
+                while (cursor <= fin) {
+                    const diaSemana = cursor.getDay(); // 0=Dom, 1=Lun, ..., 6=Sab
+                    if (diaSemana >= 1 && diaSemana <= 5) { // Lunes a viernes
+                        diasHabiles++;
+                    }
+                    cursor.setDate(cursor.getDate() + 1);
+                }
+
+                if (diasHabiles > 0) {
+                    diasCount.textContent = diasHabiles;
+                    diasCounter.classList.remove('hidden');
+                } else {
+                    diasCounter.classList.add('hidden');
+                }
             } else {
                 diasCounter.classList.add('hidden');
             }

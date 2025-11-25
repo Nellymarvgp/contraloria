@@ -12,9 +12,13 @@ use App\Models\PrimaAntiguedad;
 use App\Models\PrimaProfesionalizacion;
 use App\Models\NivelRango;
 use App\Models\GrupoCargo;
+use App\Models\VacacionesPorDisfrute;
+use App\Models\Beneficio;
+use App\Models\BeneficioCargo;
 use Illuminate\Http\Request;
 use App\Imports\EmpleadosImport;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class EmpleadoController extends Controller
 {
@@ -27,7 +31,19 @@ class EmpleadoController extends Controller
     public function index()
     {
         $empleados = Empleado::with(['user', 'cargo', 'departamento', 'horario', 'estado'])->paginate(10);
-        return view('empleados.index', compact('empleados'));
+
+        // Detectar si existen empleados con antigüedad pendiente de actualizar
+        $pendientes = $this->getEmpleadosConAntiguedadPendiente();
+        $tienePendientes = $pendientes->isNotEmpty();
+
+        return view('empleados.index', compact('empleados', 'tienePendientes'));
+    }
+
+    // Listar empleados con año de servicio cumplido pero antigüedad sin actualizar
+    public function antiguedadPendiente()
+    {
+        $pendientes = $this->getEmpleadosConAntiguedadPendiente();
+        return view('empleados.antiguedad_pendiente', compact('pendientes'));
     }
 
     public function create(Request $request)
@@ -56,7 +72,8 @@ class EmpleadoController extends Controller
             $gruposCargos = collect(); // Vacío hasta que seleccione tipo_cargo
         }
 
-        $deducciones = \App\Models\Deduccion::whereIn('tipo', ['beneficio', 'parametro'])->where('activo', 1)->get();
+        // Para el formulario, las deducciones que se pueden asignar son todas las de tipo 'deduccion' activas
+        $deducciones = \App\Models\Deduccion::where('tipo', 'deduccion')->where('activo', 1)->get();
 
         return view('empleados.create', compact(
             'users', 'cargos', 'departamentos', 'horarios', 'estados',
@@ -84,7 +101,7 @@ class EmpleadoController extends Controller
             'tiene_hijos' => 'nullable|boolean',
             'cantidad_hijos' => 'nullable|integer|min:1|required_if:tiene_hijos,1',
             'beneficios' => 'nullable|array',
-            'beneficios.*' => 'exists:deducciones,id',
+            'beneficios.*' => 'exists:beneficios,id',
             'deducciones' => 'nullable|array',
             'deducciones.*' => 'exists:deducciones,id',
         ]);
@@ -94,6 +111,23 @@ class EmpleadoController extends Controller
         if(!$data['tiene_hijos']) {
             $data['cantidad_hijos'] = null;
         }
+        // Calcular tiempo de antigüedad en años basado en la fecha de ingreso
+        if (!empty($data['fecha_ingreso'])) {
+            $fechaIngreso = Carbon::parse($data['fecha_ingreso']);
+            $tiempoAntiguedad = $fechaIngreso->diffInYears(Carbon::now());
+            $data['tiempo_antiguedad'] = $tiempoAntiguedad;
+
+            // Asignar automáticamente la prima de antigüedad correspondiente
+            $prima = PrimaAntiguedad::where('estado', 1)
+                ->where('anios', '<=', $tiempoAntiguedad)
+                ->orderByDesc('anios')
+                ->first();
+            $data['prima_antiguedad_id'] = $prima ? $prima->id : null;
+        }
+
+        // Al registrar un empleado, por defecto PVacaciones debe ser true
+        $data['pvacaciones'] = true;
+
         $empleado = Empleado::create($data);
 
         // Asociar beneficios
@@ -124,7 +158,7 @@ class EmpleadoController extends Controller
             'profesional_universitario' => 'Profesional Universitario'
         ];
 
-        $beneficios = \App\Models\Deduccion::where('tipo', 'beneficio')->where('activo', 1)->get();
+        $beneficios = \App\Models\Beneficio::all();
         $deducciones = \App\Models\Deduccion::where('tipo', 'deduccion')->where('activo', 1)->get();
 
         return view('empleados.edit', compact(
@@ -152,7 +186,7 @@ class EmpleadoController extends Controller
             'tiene_hijos' => 'nullable|boolean',
             'cantidad_hijos' => 'nullable|integer|min:1|required_if:tiene_hijos,1',
             'beneficios' => 'nullable|array',
-            'beneficios.*' => 'exists:deducciones,id',
+            'beneficios.*' => 'exists:beneficios,id',
             'deducciones' => 'nullable|array',
             'deducciones.*' => 'exists:deducciones,id',
         ]);
@@ -162,14 +196,24 @@ class EmpleadoController extends Controller
         if(!$data['tiene_hijos']) {
             $data['cantidad_hijos'] = null;
         }
+        // Calcular tiempo de antigüedad en años basado en la fecha de ingreso
+        if (!empty($data['fecha_ingreso'])) {
+            $fechaIngreso = Carbon::parse($data['fecha_ingreso']);
+            $tiempoAntiguedad = $fechaIngreso->diffInYears(Carbon::now());
+            $data['tiempo_antiguedad'] = $tiempoAntiguedad;
+
+            // Asignar automáticamente la prima de antigüedad correspondiente
+            $prima = PrimaAntiguedad::where('estado', 1)
+                ->where('anios', '<=', $tiempoAntiguedad)
+                ->orderByDesc('anios')
+                ->first();
+            $data['prima_antiguedad_id'] = $prima ? $prima->id : null;
+        }
         $empleado->update($data);
 
-        // Asociar beneficios
-        if ($request->filled('beneficios')) {
-            $empleado->beneficios()->sync($request->input('beneficios'));
-        } else {
-            $empleado->beneficios()->detach();
-        }
+        // Asociar beneficios: sincronizar siempre con lo que venga en el request.
+        // Si no viene nada, se interpreta como "ningún beneficio seleccionado" y se eliminan todos.
+        $empleado->beneficios()->sync($request->input('beneficios', []));
         // Asociar deducciones
         if ($request->filled('deducciones')) {
             $empleado->deducciones()->sync($request->input('deducciones'));
@@ -178,6 +222,34 @@ class EmpleadoController extends Controller
         }
 
         return redirect()->route('empleados.index')->with('success', 'Empleado actualizado exitosamente.');
+    }
+
+    /**
+     * Obtener beneficios disponibles para un cargo concreto (más los de "Todos").
+     */
+    public function beneficiosPorCargo(Cargo $cargo)
+    {
+        $tipoCargo = $cargo->tipo_cargo;
+
+        // Buscar configuraciones de beneficios por tipo de cargo y por 'Todos'
+        $beneficiosCargo = BeneficioCargo::with('beneficio')
+            ->whereIn('cargo', [$tipoCargo, 'Todos'])
+            ->get();
+
+        // Devolver solo la lista de beneficios únicos (id + nombre)
+        $beneficios = $beneficiosCargo
+            ->pluck('beneficio')
+            ->filter() // eliminar nulos por si acaso
+            ->unique('id')
+            ->values()
+            ->map(function (Beneficio $beneficio) {
+                return [
+                    'id' => $beneficio->id,
+                    'beneficio' => $beneficio->beneficio,
+                ];
+            });
+
+        return response()->json($beneficios);
     }
 
     public function destroy(Empleado $empleado)
@@ -211,5 +283,81 @@ class EmpleadoController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al importar: ' . $e->getMessage());
         }
+    }
+
+    // Actualizar antigüedad, prima de antigüedad y registrar días por disfrute para un empleado
+    public function actualizarAntiguedad(Empleado $empleado)
+    {
+        if (!$empleado->fecha_ingreso) {
+            return redirect()->back()->with('error', 'El empleado no tiene fecha de ingreso registrada.');
+        }
+
+        $hoy = Carbon::now();
+        $fechaIngreso = Carbon::parse($empleado->fecha_ingreso);
+        $aniosReales = $fechaIngreso->diffInYears($hoy);
+
+        if ($aniosReales <= 0) {
+            return redirect()->back()->with('error', 'El empleado aún no cumple un año de servicio.');
+        }
+
+        $registrado = $empleado->tiempo_antiguedad ?? 0;
+        if ($aniosReales <= $registrado) {
+            return redirect()->back()->with('error', 'La antigüedad del empleado ya está actualizada.');
+        }
+
+        // Actualizar tiempo de antigüedad, prima de antigüedad y marcar PVacaciones en false
+        $empleado->tiempo_antiguedad = $aniosReales;
+        $prima = PrimaAntiguedad::where('estado', 1)
+            ->where('anios', '<=', $aniosReales)
+            ->orderByDesc('anios')
+            ->first();
+        $empleado->prima_antiguedad_id = $prima ? $prima->id : null;
+        $empleado->pvacaciones = false;
+        $empleado->save();
+
+        // Calcular días por disfrute según los años de servicio
+        if ($aniosReales >= 1 && $aniosReales <= 5) {
+            $diasPorDisfrute = 15;
+        } elseif ($aniosReales > 5) {
+            $diasPorDisfrute = ($aniosReales - 5) + 15;
+        } else {
+            $diasPorDisfrute = 0;
+        }
+
+        if ($diasPorDisfrute > 0) {
+            VacacionesPorDisfrute::create([
+                'empleado_id' => $empleado->id,
+                'dias_por_disfrute' => $diasPorDisfrute,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Antigüedad y días por disfrute actualizados correctamente.');
+    }
+
+    // Obtener colección de empleados con antigüedad pendiente (años reales > tiempo_antiguedad almacenado)
+    protected function getEmpleadosConAntiguedadPendiente()
+    {
+        $hoy = Carbon::now();
+        $empleados = Empleado::whereNotNull('fecha_ingreso')->get();
+
+        $pendientes = $empleados->filter(function ($empleado) use ($hoy) {
+            $fechaIngreso = Carbon::parse($empleado->fecha_ingreso);
+            // diffInYears ya devuelve un entero (años completos), sin decimales
+            $aniosReales = $fechaIngreso->diffInYears($hoy);
+            $registrado = $empleado->tiempo_antiguedad ?? 0;
+
+            // Solo considerar empleados con al menos 1 año completo de diferencia
+            $diferencia = $aniosReales - $registrado;
+            return $diferencia >= 1;
+        })->values();
+
+        // Adjuntar años reales calculados para mostrar en la vista
+        $pendientes->transform(function ($empleado) use ($hoy) {
+            $fechaIngreso = Carbon::parse($empleado->fecha_ingreso);
+            $empleado->anios_reales = $fechaIngreso->diffInYears($hoy);
+            return $empleado;
+        });
+
+        return $pendientes;
     }
 }

@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('remuneracions', function (Blueprint $table) {
-            //
+        Schema::table('empleados', function (Blueprint $table) {
+            $table->boolean('pvacaciones')->default(true)->after('cantidad_hijos');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('remuneracions', function (Blueprint $table) {
-            //
+        Schema::table('empleados', function (Blueprint $table) {
+            $table->dropColumn('pvacaciones');
         });
     }
 };

@@ -15,12 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('nomina_id')->constrained()->onDelete('cascade');
             $table->foreignId('empleado_id')->constrained();
-            $table->decimal('salario_base', 12, 2);
-            $table->decimal('prima_antiguedad_monto', 12, 2)->default(0);
-            $table->decimal('prima_profesionalizacion_monto', 12, 2)->default(0);
-            $table->decimal('total_asignaciones', 12, 2)->default(0);
-            $table->decimal('total_deducciones', 12, 2)->default(0);
-            $table->decimal('total_neto', 12, 2)->default(0);
+            $table->decimal('sueldo_basico', 10, 2)->default(0);
+            $table->decimal('prima_profesionalizacion', 10, 2)->default(0);
+            $table->decimal('prima_antiguedad', 10, 2)->default(0);
+            $table->decimal('total', 10, 2)->default(0);
             $table->timestamps();
         });
     }

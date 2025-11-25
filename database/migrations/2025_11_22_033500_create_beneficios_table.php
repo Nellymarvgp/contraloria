@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('remuneracions', function (Blueprint $table) {
-            $table->enum('tipo_personal', ['obreros', 'administracion_publica'])->nullable()->after('tipo_cargo');
+        Schema::create('beneficios', function (Blueprint $table) {
+            $table->id();
+            $table->string('beneficio');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('remuneracions', function (Blueprint $table) {
-            $table->dropColumn('tipo_personal');
-        });
+        Schema::dropIfExists('beneficios');
     }
 };

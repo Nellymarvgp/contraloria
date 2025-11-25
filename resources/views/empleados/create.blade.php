@@ -95,77 +95,15 @@
                 <p class="text-red-500 text-xs italic mt-1 hidden" id="fecha-ingreso-error"></p>
             </div>
 
-           
-
-            <!-- NUEVOS CAMPOS: HIJOS -->
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">¿Tiene hijos?</label>
-                <input type="checkbox" id="tiene_hijos" name="tiene_hijos" value="1" {{ old('tiene_hijos') ? 'checked' : '' }}>
-            </div>
-            <div class="mb-4" id="cantidad_hijos_div" style="display: none;">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="cantidad_hijos">Cantidad de hijos</label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cantidad_hijos" name="cantidad_hijos" type="number" min="1" value="{{ old('cantidad_hijos') }}">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="anios_antiguedad">
+                    Años de Antigüedad
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-100" id="anios_antiguedad" type="number" name="anios_antiguedad" value="{{ old('anios_antiguedad') }}" readonly>
             </div>
 
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Beneficios personalizados</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                    @foreach($deducciones as $beneficio)
-                        @if($beneficio->tipo === 'beneficio')
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="beneficios[]" value="{{ $beneficio->id }}" {{ (is_array(old('beneficios')) && in_array($beneficio->id, old('beneficios', []))) ? 'checked' : '' }}>
-                            <span class="ml-2">{{ $beneficio->nombre }}</span>
-                        </label>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Deducciones tipo Beneficio</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                    @foreach($deducciones as $deduccion)
-                        @if($deduccion->tipo === 'deduccion')
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="deducciones[]" value="{{ $deduccion->id }}" {{ (is_array(old('deducciones')) && in_array($deduccion->id, old('deducciones', []))) ? 'checked' : '' }}>
-                            <span class="ml-2">{{ $deduccion->nombre }}</span>
-                        </label>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Deducciones tipo Parámetro</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                    @foreach($deducciones as $deduccion)
-                        @if($deduccion->tipo === 'parametro')
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="deducciones[]" value="{{ $deduccion->id }}" {{ (is_array(old('deducciones')) && in_array($deduccion->id, old('deducciones', []))) ? 'checked' : '' }}>
-                            <span class="ml-2">{{ $deduccion->nombre }}</span>
-                        </label>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-
-        
 
             <h3 class="text-lg font-semibold text-gray-700 mb-4">Información de Remuneraciones y Clasificación</h3>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_antiguedad_id">
-                    Antigüedad
-                </label>
-                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('prima_antiguedad_id') border-red-500 @enderror"
-                    id="prima_antiguedad_id" name="prima_antiguedad_id">
-                    <option value="">Antigüedad</option>
-                    @foreach($primasAntiguedad as $prima)
-                        <option value="{{ $prima->id }}" {{ old('prima_antiguedad_id') == $prima->id ? 'selected' : '' }}>
-                            {{ $prima->anios }} años
-                        </option>
-                    @endforeach
-                </select>
-                <p class="text-red-500 text-xs italic mt-1 hidden" id="prima-antiguedad-error"></p>
-            </div>
 
             <!-- La Prima de Profesionalización se asigna automáticamente según el Tipo de Cargo -->
             <input type="hidden" id="prima_profesionalizacion_id" name="prima_profesionalizacion_id" value="">
@@ -250,6 +188,33 @@
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-100" id="salario" type="number" name="salario" value="{{ old('salario') }}" step="0.01" min="0" readonly>
                 <p class="text-red-500 text-xs italic mt-1 hidden" id="salario-error"></p>
             </div>
+            <!-- NUEVOS CAMPOS: HIJOS -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">¿Tiene hijos?</label>
+                <input type="checkbox" id="tiene_hijos" name="tiene_hijos" value="1" {{ old('tiene_hijos') ? 'checked' : '' }}>
+            </div>
+            <div class="mb-4" id="cantidad_hijos_div" style="display: none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="cantidad_hijos">Cantidad de hijos</label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="cantidad_hijos" name="cantidad_hijos" type="number" min="1" value="{{ old('cantidad_hijos') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Beneficios personalizados</label>
+                <div id="beneficios-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    {{-- Los beneficios se cargarán dinámicamente según el cargo seleccionado --}}
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Deducciones</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                    @foreach($deducciones as $deduccion)
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="deducciones[]" value="{{ $deduccion->id }}" {{ (is_array(old('deducciones')) && in_array($deduccion->id, old('deducciones', []))) ? 'checked' : '' }}>
+                            <span class="ml-2">{{ $deduccion->nombre }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="observaciones">
                     Observaciones
@@ -284,6 +249,9 @@ function mostrarOcultarCampos() {
     // Limpiar el select de grupo_cargo y el campo salario al cambiar el tipo
     if (tipo === 'administracion_publica') {
         document.getElementById('grupo_cargo_id').innerHTML = '<option value="">Seleccione un grupo</option>';
+        document.getElementById('salario').value = '';
+    }
+    if (tipo === 'obreros') {
         document.getElementById('salario').value = '';
     }
     if (tipo === 'obreros') {
@@ -403,6 +371,156 @@ function obtenerSalarioObrero() {
         });
 }
 
+// Calcular años de antigüedad a partir de la fecha de ingreso
+function calcularAntiguedad() {
+    const fechaIngresoInput = document.getElementById('fecha_ingreso');
+    const antiguedadInput = document.getElementById('anios_antiguedad');
+
+    if (!fechaIngresoInput || !antiguedadInput) return;
+
+    const valor = fechaIngresoInput.value;
+    if (!valor) {
+        antiguedadInput.value = '';
+        return;
+    }
+
+    const hoy = new Date();
+    const fechaIngreso = new Date(valor);
+
+    if (isNaN(fechaIngreso.getTime())) {
+        antiguedadInput.value = '';
+        return;
+    }
+
+    let anios = hoy.getFullYear() - fechaIngreso.getFullYear();
+    const mesActual = hoy.getMonth();
+    const diaActual = hoy.getDate();
+    const mesIngreso = fechaIngreso.getMonth();
+    const diaIngreso = fechaIngreso.getDate();
+
+    if (mesActual < mesIngreso || (mesActual === mesIngreso && diaActual < diaIngreso)) {
+        anios--;
+    }
+
+    if (anios < 0) {
+        antiguedadInput.value = '';
+        return;
+    }
+
+    antiguedadInput.value = anios;
+}
+
+// Cargar beneficios por cargo
+function cargarBeneficiosPorCargo() {
+    const cargoSelect = document.getElementById('cargo_id');
+    const container = document.getElementById('beneficios-container');
+    if (!cargoSelect || !container) return;
+
+    const cargoId = cargoSelect.value;
+    container.innerHTML = '';
+
+    if (!cargoId) {
+        return;
+    }
+
+    fetch(`/empleados/beneficios-por-cargo/${cargoId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener beneficios por cargo');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!Array.isArray(data)) return;
+            data.forEach(beneficio => {
+                const label = document.createElement('label');
+                label.className = 'inline-flex items-center';
+
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = 'beneficios[]';
+                input.value = beneficio.id;
+
+                const span = document.createElement('span');
+                span.className = 'ml-2';
+                span.textContent = beneficio.beneficio;
+
+                label.appendChild(input);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+// Obtener el salario para obreros según clasificación y grado
+function obtenerSalarioObrero() {
+    const tipo = document.getElementById('tipo_personal').value;
+    if (tipo !== 'obreros') return;
+    const clasificacion = document.getElementById('clasificacion').value;
+    const grado = document.getElementById('grado').value;
+    const salarioInput = document.getElementById('salario');
+    salarioInput.value = '';
+    if (!clasificacion || !grado) {
+        return;
+    }
+    const params = new URLSearchParams({
+        tipo_personal: 'obreros',
+        clasificacion: clasificacion,
+        grado: grado
+    });
+    fetch(`/remuneracion?${params.toString()}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener salario: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.valor) {
+                salarioInput.value = data.valor;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Obtener el salario para obreros según clasificación y grado
+function obtenerSalarioObrero() {
+    const tipo = document.getElementById('tipo_personal').value;
+    if (tipo !== 'obreros') return;
+    const clasificacion = document.getElementById('clasificacion').value;
+    const grado = document.getElementById('grado').value;
+    const salarioInput = document.getElementById('salario');
+    salarioInput.value = '';
+    if (!clasificacion || !grado) {
+        return;
+    }
+    const params = new URLSearchParams({
+        tipo_personal: 'obreros',
+        clasificacion: clasificacion,
+        grado: grado
+    });
+    fetch(`/remuneracion?${params.toString()}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener salario: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.valor) {
+                salarioInput.value = data.valor;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
 // Configurar los event listeners cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     // Mostrar/ocultar campos según el tipo de personal inicial
@@ -416,6 +534,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listener para grupo_cargo_id
     document.getElementById('grupo_cargo_id').addEventListener('change', obtenerSalarioPorGrupo);
+    
+    // Event listeners para obreros
+    document.getElementById('clasificacion').addEventListener('change', obtenerSalarioObrero);
+    document.getElementById('grado').addEventListener('change', obtenerSalarioObrero);
     
     // Event listeners para obreros
     document.getElementById('clasificacion').addEventListener('change', obtenerSalarioObrero);
@@ -439,6 +561,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     tieneHijos.addEventListener('change', mostrarCantidadHijos);
     mostrarCantidadHijos();
+
+    // Calcular la antigüedad inicial y al cambiar la fecha de ingreso
+    const fechaIngresoInput = document.getElementById('fecha_ingreso');
+    if (fechaIngresoInput) {
+        calcularAntiguedad();
+        fechaIngresoInput.addEventListener('change', calcularAntiguedad);
+    }
+
+    // Cargar beneficios cuando se cambie el cargo
+    const cargoSelect = document.getElementById('cargo_id');
+    if (cargoSelect) {
+        cargoSelect.addEventListener('change', cargarBeneficiosPorCargo);
+        // Intentar cargar si ya viene un cargo seleccionado (old value)
+        if (cargoSelect.value) {
+            cargarBeneficiosPorCargo();
+        }
+    }
 });
 </script>
 
