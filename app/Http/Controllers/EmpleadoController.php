@@ -319,7 +319,7 @@ class EmpleadoController extends Controller
         if ($aniosReales >= 1 && $aniosReales <= 5) {
             $diasPorDisfrute = 15;
         } elseif ($aniosReales > 5) {
-            $diasPorDisfrute = ($aniosReales - 5) + 15;
+            $diasPorDisfrute = (($aniosReales - 1) / 5) + 15;
         } else {
             $diasPorDisfrute = 0;
         }

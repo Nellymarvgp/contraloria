@@ -123,23 +123,6 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo_cargo">
-                        Tipo de Cargo
-                    </label>
-                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('tipo_cargo') border-red-500 @enderror"
-                        id="tipo_cargo" name="tipo_cargo" onchange="filtrarGruposCargo()">
-                        <option value="">Seleccione un tipo de cargo</option>
-                        @foreach($tiposCargo as $value => $label)
-                            <option value="{{ $value }}" {{ old('tipo_cargo', $empleado->tipo_cargo) == $value ? 'selected' : '' }}>
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <p class="text-red-500 text-xs italic mt-1 hidden" id="tipo-cargo-error"></p>
-                </div>
-            </div>
-
-                <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="salario">
                         Salario
                     </label>
@@ -147,7 +130,8 @@
                         id="salario" type="number" name="salario" value="{{ old('salario', $empleado->salario) }}" step="0.01" min="0" required>
                     <p class="text-red-500 text-xs italic mt-1 hidden" id="salario-error"></p>
                 </div>
-                
+            </div>
+
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="fecha_ingreso">
                         Fecha de Ingreso
@@ -155,6 +139,10 @@
                     <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('fecha_ingreso') border-red-500 @enderror"
                         id="fecha_ingreso" type="date" name="fecha_ingreso" value="{{ old('fecha_ingreso', $empleado->fecha_ingreso->format('Y-m-d')) }}" required>
                     <p class="text-red-500 text-xs italic mt-1 hidden" id="fecha-ingreso-error"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <!-- Espacio reservado para mantener el layout del grid -->
                 </div>
             </div>
 
@@ -238,23 +226,9 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nivel_rango_id">
-                        Nivel de Rango
-                    </label>
-                    <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('nivel_rango_id') border-red-500 @enderror"
-                        id="nivel_rango_id" name="nivel_rango_id">
-                        <option value="">Seleccione un nivel de rango</option>
-                        @foreach($nivelesRangos as $nivel)
-                            <option value="{{ $nivel->id }}" {{ old('nivel_rango_id', $empleado->nivel_rango_id) == $nivel->id ? 'selected' : '' }}>
-                                {{ $nivel->nombre }} - {{ $nivel->descripcion }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <p class="text-red-500 text-xs italic mt-1 hidden" id="nivel-rango-error"></p>
-                </div>
-                
-                <!-- Grupo Cargo movido a otra sección y ya no se duplica aquí -->
+                <!-- Espacio reservado para mantener el layout del grid -->
+                <div class="mb-4"></div>
+                <div class="mb-4"></div>
             </div>
 
             <!-- SECCIÓN DE HIJOS Y BENEFICIOS -->

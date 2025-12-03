@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('empleado_id')->constrained()->onDelete('cascade');
             $table->string('periodo');
+            $table->integer('dias_pagados')->default(0);
             $table->decimal('monto', 12, 2);
             $table->integer('year');
             $table->timestamps();

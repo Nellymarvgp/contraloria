@@ -301,39 +301,119 @@ class VacacionController extends Controller
 
     /**
      * Marcar el pago de vacaciones pendientes para un empleado.
-     * La lógica concreta de negocio se definirá posteriormente.
+     * 
+     * @param Empleado $empleado
+     * @return \Illuminate\Http\Response
+     * 
+     * @throws \Exception Si ocurre un error al procesar el pago
      */
     public function pagarPendiente(Empleado $empleado)
     {
         $user = auth()->user();
         if (!$user->isAdmin()) {
-            return redirect()->route('vacaciones.por_pagar')->with('error', 'Acceso no autorizado.');
+            return redirect()->route('vacaciones.por_pagar')
+                ->with('error', 'Acceso no autorizado.');
         }
 
-        $year = now()->year;
-        $periodo = ($year - 1) . ' - ' . $year;
-        $monto = round(($empleado->salario / 30) * 15, 2);
+        try {
+            // Validar datos requeridos
+            if (empty($empleado->fecha_ingreso)) {
+                throw new \Exception('El empleado no tiene fecha de ingreso registrada.');
+            }
 
-        $empleado->pvacaciones = true;
-        $empleado->save();
+            if (empty($empleado->salario) || $empleado->salario <= 0) {
+                throw new \Exception('El salario del empleado no está configurado correctamente.');
+            }
 
-        PagoVacaciones::create([
-            'empleado_id' => $empleado->id,
-            'periodo' => $periodo,
-            'monto' => $monto,
-            'year' => $year,
-        ]);
+            $year = now()->year;
+            $periodo = ($year - 1) . ' - ' . $year;
 
-        $pdf = Pdf::loadView('vacaciones.pago_pdf', [
-            'empleado' => $empleado,
-            'periodo' => $periodo,
-            'monto' => $monto,
-            'year' => $year,
-        ])->setPaper('A4', 'portrait');
+            // Obtener los días disponibles de vacaciones
+            $diasDisponibles = $this->calcularDiasDisponibles($empleado);
 
-        $filename = 'pago_vacaciones_' . $empleado->cedula . '_' . $year . '.pdf';
+            if ($diasDisponibles <= 0) {
+                throw new \Exception('El empleado no tiene días de vacaciones disponibles para pagar.');
+            }
 
-        return $pdf->stream($filename);
+            // Calcular días que se asignarán según años de servicio
+            $fechaIngreso = Carbon::parse($empleado->fecha_ingreso);
+            $aniosServicio = $fechaIngreso->diffInYears(now());
+            $diasBase = 15;
+            
+            // Calcular días adicionales: 1 día por cada 5 años completos de servicio
+            // 1-5 años: 0 días adicionales
+            // 6-10 años: 1 día adicional (total 16 días)
+            // 11-15 años: 2 días adicionales (total 17 días)
+            // Y así sucesivamente...
+            $diasAdicionales = 0;
+            if ($aniosServicio > 5) {
+                $diasAdicionales = floor(($aniosServicio - 1) / 5);
+            }
+            
+            $diasAsignacion = $diasBase + $diasAdicionales;
+            
+            // Registrar o actualizar los días por disfrute
+            $vacacionesDisfrute = VacacionesPorDisfrute::updateOrCreate(
+                ['empleado_id' => $empleado->id],
+                ['dias_por_disfrute' => $diasAsignacion]
+            );
+            
+            // Depuración: Registrar el cálculo para verificación
+            \Log::info("Cálculo de vacaciones", [
+                'empleado_id' => $empleado->id,
+                'fecha_ingreso' => $empleado->fecha_ingreso,
+                'anios_servicio' => $aniosServicio,
+                'dias_base' => $diasBase,
+                'dias_adicionales' => $diasAdicionales,
+                'total_dias' => $diasAsignacion,
+                'dias_por_disfrute' => $vacacionesDisfrute->dias_por_disfrute
+            ]);
+            
+            // Calcular el monto según la nueva fórmula: (sueldo_base / 30) * dias_que_se_asignaran
+            $monto = round(($empleado->salario / 30) * $diasAsignacion, 2);
+
+            // Iniciar transacción para asegurar la integridad de los datos
+            \DB::beginTransaction();
+
+            try {
+                // Marcar como pagado en la tabla de empleados
+                $empleado->pvacaciones = true;
+                $empleado->save();
+
+                // Registrar el pago
+                $pago = PagoVacaciones::create([
+                    'empleado_id' => $empleado->id,
+                    'periodo' => $periodo,
+                    'monto' => $monto,
+                    'year' => $year,
+                    'dias_pagados' => $diasAsignacion,
+                ]);
+
+                \DB::commit();
+
+            } catch (\Exception $e) {
+                \DB::rollBack();
+                throw $e; // Relanzar la excepción para ser manejada por el catch externo
+            }
+
+            // Generar PDF con los datos necesarios
+            $pdf = Pdf::loadView('vacaciones.pago_pdf', [
+                'empleado' => $empleado,
+                'periodo' => $periodo,
+                'monto' => $monto,
+                'year' => $year,
+                'dias_pagados' => $diasAsignacion,
+                'dias_base' => $diasBase,
+                'dias_adicionales' => $diasAdicionales,
+            ])->setPaper('A4', 'portrait');
+
+            $filename = 'pago_vacaciones_' . $empleado->cedula . '_' . $year . '.pdf';
+            return $pdf->stream($filename);
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error al procesar el pago: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -357,13 +437,32 @@ class VacacionController extends Controller
 
     /**
      * Calcular días de vacaciones disponibles para un empleado
-     * (días asignados por disfrute menos días ya tomados en solicitudes aprobadas).
+     * (días asignados por regla menos días ya tomados en solicitudes aprobadas).
      * Se puede excluir una vacación específica (por ejemplo, al editar).
+     * 
+     * @param Empleado $empleado
+     * @param int|null $excluirVacacionId ID de la vacación a excluir del cálculo
+     * @return int Días disponibles de vacaciones
      */
     protected function calcularDiasDisponibles(Empleado $empleado, $excluirVacacionId = null): int
     {
-        // Días asignados por disfrute
-        $diasAsignados = $empleado->vacacionesPorDisfrute()->sum('dias_por_disfrute');
+        // Verificar si el empleado tiene fecha de ingreso
+        if (empty($empleado->fecha_ingreso)) {
+            return 0;
+        }
+
+        // Calcular días asignados según años de servicio
+        $fechaIngreso = Carbon::parse($empleado->fecha_ingreso);
+        $aniosServicio = $fechaIngreso->diffInYears(now());
+        $diasBase = 15;
+        
+        // Calcular días adicionales: 1 día por cada 5 años completos de servicio
+        $diasAdicionales = 0;
+        if ($aniosServicio >= 6) {
+            $diasAdicionales = floor(($aniosServicio - 1) / 5) - 1;
+        }
+        
+        $diasAsignados = $diasBase + $diasAdicionales;
 
         // Días ya tomados en vacaciones aprobadas
         $vacacionesAprobadas = $empleado->vacaciones()
@@ -375,6 +474,7 @@ class VacacionController extends Controller
 
         $diasTomados = $vacacionesAprobadas->sum('dias_solicitados');
 
+        // Asegurarse de no devener un valor negativo
         return max($diasAsignados - $diasTomados, 0);
     }
 }

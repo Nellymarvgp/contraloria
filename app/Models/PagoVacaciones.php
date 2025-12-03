@@ -16,6 +16,7 @@ class PagoVacaciones extends Model
         'periodo',
         'monto',
         'year',
+        'dias_pagados',
     ];
 
     public function empleado()

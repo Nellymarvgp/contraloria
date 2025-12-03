@@ -49,12 +49,31 @@
         </div>
 
         <div class="section-title" style="margin-top: 15px;">Detalle del Pago</div>
-
+        <div class="row">
+            <span class="label">Período de pago:</span>
+            <span class="value">{{ $periodo ?? 'N/A' }}</span>
+        </div>
+        <div class="row">
+            <span class="label">Días base (15):</span>
+            <span class="value">{{ $dias_base ?? 15 }} días</span>
+        </div>
+        <div class="row">
+            <span class="label">Días adicionales:</span>
+            <span class="value">{{ $dias_adicionales ?? 0 }} días</span>
+        </div>
+        <div class="row">
+            <span class="label">Total días a pagar:</span>
+            <span class="value"><strong>{{ $dias_pagados ?? 0 }} días</strong></span>
+        </div>
+        <div class="row">
+            <span class="label">Salario base:</span>
+            <span class="value">{{ number_format($empleado->salario ?? 0, 2, ',', '.') }} Bs</span>
+        </div>
         <div class="row">
             <span class="label">Monto a pagar:</span>
-            <span class="value">{{ number_format($monto, 2, ',', '.') }} Bs</span>
+            <span class="value"><strong>{{ number_format($monto ?? 0, 2, ',', '.') }} Bs</strong></span>
         </div>
-
+       
         <div class="signature-box mt-20">
             <div class="signature-line"></div>
             <div>Firma del empleador</div>

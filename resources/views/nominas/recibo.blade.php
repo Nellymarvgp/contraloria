@@ -20,11 +20,9 @@
         <img src="{{ public_path('images/logo.jpeg') }}" class="logo" alt="Logo">
         <div class="titulo">CONTRALORÍA DEL MUNICIPIO INDEPENDENCIA<br>RECIBO DE NÓMINA</div>
         <div class="datos">
-            <b>Nómina:</b> {{ $recibo['nomina']->nombre }}<br>
+            <b>Nómina:</b> {{ $recibo['nomina']->descripcion }}<br>
             <b>Periodo:</b> {{ $recibo['nomina']->fecha_inicio->format('d/m/Y') }} al {{ $recibo['nomina']->fecha_fin->format('d/m/Y') }}<br>
             <b>Despacho:</b> {{ $recibo['empleado']->departamento->nombre ?? '' }}<br>
-            <b>Empleado:</b> {{ $recibo['empleado']->nombre }} {{ $recibo['empleado']->apellido }}<br>
-            <b>Empleado:</b> {{ $recibo['empleado']->user->nombre }} {{ $recibo['empleado']->user->apellido }}<br>
             <b>Empleado:</b> {{ $recibo['empleado']->user->nombre }} {{ $recibo['empleado']->user->apellido }}<br>
             <b>Cédula:</b> {{ $recibo['empleado']->cedula }}<br>
             <b>Fecha de Ingreso:</b> {{ $recibo['empleado']->fecha_ingreso ? $recibo['empleado']->fecha_ingreso->format('d/m/Y') : '' }}<br>
@@ -66,8 +64,8 @@
         <b>Neto a Cobrar:</b> {{ number_format($totalAsignaciones - $totalDeducciones, 2) }} Bs
         <div class="firma">
             <br><br>
-            <div class="firma-linea">RECIBÍ CONFORME: _________________________</div>
-            <div style="text-align:center;margin-top:5px;">{{ $recibo['empleado']->user->nombre }} {{ $recibo['empleado']->user->apellido }}</div>
+            <div class="firma-linea">{{ $recibo['empleado']->user->nombre }} {{ $recibo['empleado']->user->apellido }}</div>
+            
         </div>
         @if(!$loop->last)
             <div class="page-break"></div>

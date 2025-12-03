@@ -11,14 +11,36 @@
         departamento: '',
         cargo: '',
         montoPagar: '',
+        diasBase: 15,
+        diasAdicionales: 0,
+        totalDias: 15,
         setFromButton(el) {
             const sueldo = parseFloat(el.dataset.sueldo || '0');
+            const fechaIngreso = el.dataset.fechaingreso ? new Date(el.dataset.fechaingreso) : null;
             const currentYear = new Date().getFullYear();
+            
+            // Calcular años de servicio
+            let aniosServicio = 0;
+            if (fechaIngreso) {
+                const diffInMs = Date.now() - fechaIngreso.getTime();
+                const ageDate = new Date(diffInMs);
+                aniosServicio = Math.abs(ageDate.getUTCFullYear() - 1970);
+            }
+            
+            // Calcular días adicionales: 1 día por cada 5 años completos de servicio
+            this.diasAdicionales = 0;
+            if (aniosServicio > 5) {
+                this.diasAdicionales = Math.floor((aniosServicio - 1) / 5);
+            }
+            
+            this.totalDias = this.diasBase + this.diasAdicionales;
+            
             this.empleadoNombre = el.dataset.nombre || '';
             this.departamento = el.dataset.departamento || '';
             this.cargo = el.dataset.cargo || '';
             this.periodoPagar = (currentYear - 1) + ' - ' + currentYear;
-            this.montoPagar = (sueldo / 30 * 15).toFixed(2);
+            this.montoPagar = (sueldo / 30 * this.totalDias).toFixed(2);
+            
             this.openModal = true;
             this.$nextTick(() => {
                 if (this.$refs.pagarForm) {
@@ -71,6 +93,7 @@
                             data-departamento="{{ optional($empleado->departamento)->nombre ?? 'N/A' }}"
                             data-cargo="{{ optional($empleado->cargo)->nombre ?? 'N/A' }}"
                             data-sueldo="{{ $empleado->salario }}"
+                            data-fechaingreso="{{ $empleado->fecha_ingreso }}"
                             @click="setFromButton($event.currentTarget)"
                         >
                             <i class="fas fa-money-bill-wave mr-1"></i> Pagar
@@ -127,9 +150,26 @@
                     <p class="mt-1 text-sm text-gray-900" x-text="cargo"></p>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Monto a pagar</label>
-                    <p class="mt-1 text-sm text-gray-900" x-text="montoPagar"></p>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium text-gray-700">Días base:</span>
+                        <span class="text-sm text-gray-900" x-text="diasBase + ' días'"></span>
+                    </div>
+                    <div class="flex justify-between" x-show="diasAdicionales > 0">
+                        <span class="text-sm font-medium text-gray-700">Días adicionales:</span>
+                        <span class="text-sm text-gray-900" x-text="diasAdicionales + ' días'"></span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
+                        <span class="text-sm font-medium text-gray-700">Total días:</span>
+                        <span class="text-sm font-semibold text-gray-900" x-text="totalDias + ' días'"></span>
+                    </div>
+                    <div class="flex justify-between pt-2">
+                        <span class="text-sm font-medium text-gray-700">Monto a pagar:</span>
+                        <span class="text-sm font-semibold text-gray-900" x-text="'Bs. ' + parseFloat(montoPagar).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">
+                        (Sueldo / 30) × Días = (Bs. <span x-text="(parseFloat(montoPagar) / totalDias * 30).toFixed(2)"></span> / 30) × <span x-text="totalDias"></span> días
+                    </div>
                 </div>
             </div>
 
