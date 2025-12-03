@@ -110,9 +110,9 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="tipo_personal">Tipo de Personal</label>
-                <select id="tipo_personal" name="tipo_personal" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <select id="tipo_personal" name="tipo_personal" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" onchange="mostrarOcultarCampos()">
                     <option value="">Seleccione tipo de personal</option>
-                    <option value="administracion_publica">Administración Pública</option>
+                    <option value="administracion_publica">Funcionario Público</option>
                     <option value="obreros">Obrero</option>
                 </select>
             </div>
@@ -139,14 +139,31 @@
             <div class="mb-4" id="grupo_cargo_div" style="display:none;">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="grupo_cargo_id">Grupo de Cargo</label>
                 <select id="grupo_cargo_id" name="grupo_cargo_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" {{ empty($gruposCargos) ? 'disabled' : '' }}>
-    <option value="">Seleccione un grupo de cargo</option>
-    @foreach($gruposCargos as $grupo)
-        <option value="{{ $grupo->id }}" {{ old('grupo_cargo_id') == $grupo->id ? 'selected' : '' }}>{{ $grupo->descripcion }}</option>
-    @endforeach
-</select>
-@if(empty($gruposCargos) || $gruposCargos->count() == 0)
-    <p class="text-sm text-gray-500 mt-1">Seleccione primero un tipo de cargo para ver los grupos disponibles.</p>
-@endif
+                    <option value="">Seleccione un grupo de cargo</option>
+                    @foreach($gruposCargos as $grupo)
+                        <option value="{{ $grupo->id }}" {{ old('grupo_cargo_id') == $grupo->id ? 'selected' : '' }}>{{ $grupo->descripcion }}</option>
+                    @endforeach
+                </select>
+                @if(empty($gruposCargos) || $gruposCargos->count() == 0)
+                    <p class="text-sm text-gray-500 mt-1">Seleccione primero un tipo de cargo para ver los grupos disponibles.</p>
+                @endif
+            </div>
+            
+            <!-- Prima de Profesionalización (solo para funcionarios públicos) -->
+            <div class="mb-4" id="prima_profesionalizacion_div" style="display: none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_profesionalizacion_id">
+                    Prima de Profesionalización
+                </label>
+                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('prima_profesionalizacion_id') border-red-500 @enderror"
+                    id="prima_profesionalizacion_id" name="prima_profesionalizacion_id">
+                    <option value="">Seleccione una opción</option>
+                    @foreach($primasProfesionalizacion as $prima)
+                        <option value="{{ $prima->id }}" {{ old('prima_profesionalizacion_id') == $prima->id ? 'selected' : '' }}>
+                            {{ $prima->descripcion }} ({{ $prima->porcentaje }}%)
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-red-500 text-xs italic mt-1 hidden" id="prima-profesionalizacion-error"></p>
             </div>
             <div class="mb-4" id="clasificacion_div" style="display:none;">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="clasificacion">Clasificación</label>
@@ -182,6 +199,24 @@
                 </select>
                 <p class="text-red-500 text-xs italic mt-1 hidden" id="cargo-error"></p>
             </div>
+            
+            <!-- Prima de Profesionalización (solo para funcionarios públicos) -->
+            <div class="mb-4" id="prima_profesionalizacion_div" style="display: none;">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="prima_profesionalizacion_id">
+                    Prima de Profesionalización
+                </label>
+                <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('prima_profesionalizacion_id') border-red-500 @enderror"
+                    id="prima_profesionalizacion_id" name="prima_profesionalizacion_id">
+                    <option value="">Seleccione una opción</option>
+                    @foreach($primasProfesionalizacion as $prima)
+                        <option value="{{ $prima->id }}" {{ old('prima_profesionalizacion_id') == $prima->id ? 'selected' : '' }}>
+                            {{ $prima->descripcion }} ({{ $prima->porcentaje }}%)
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-red-500 text-xs italic mt-1 hidden" id="prima-profesionalizacion-error"></p>
+            </div>
+            
             <!-- CAMPO DE SALARIO SOLO LECTURA -->
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="salario">Salario</label>
@@ -240,24 +275,48 @@
 <script> 
 function mostrarOcultarCampos() {
     const tipo = document.getElementById('tipo_personal').value;
-    document.getElementById('nivel_rango_div').style.display = tipo === 'administracion_publica' ? '' : 'none';
-    document.getElementById('tipo_cargo_div').style.display = tipo === 'administracion_publica' ? '' : 'none';
-    document.getElementById('grupo_cargo_div').style.display = tipo === 'administracion_publica' ? '' : 'none';
-    document.getElementById('clasificacion_div').style.display = tipo === 'obreros' ? '' : 'none';
-    document.getElementById('grado_div').style.display = tipo === 'obreros' ? '' : 'none';
+    const esFuncionarioPublico = tipo === 'administracion_publica';
+    const esObrero = tipo === 'obreros';
+    
+    // Mostrar/ocultar campos según el tipo de personal
+    document.getElementById('nivel_rango_div').style.display = esFuncionarioPublico ? 'block' : 'none';
+    document.getElementById('tipo_cargo_div').style.display = esFuncionarioPublico ? 'block' : 'none';
+    document.getElementById('grupo_cargo_div').style.display = esFuncionarioPublico ? 'block' : 'none';
+    document.getElementById('clasificacion_div').style.display = esObrero ? 'block' : 'none';
+    document.getElementById('grado_div').style.display = esObrero ? 'block' : 'none';
+    
+    // Actualizar visibilidad de la prima de profesionalización
+    actualizarVisibilidadPrimaProfesionalizacion();
     
     // Limpiar el select de grupo_cargo y el campo salario al cambiar el tipo
-    if (tipo === 'administracion_publica') {
+    if (esFuncionarioPublico) {
         document.getElementById('grupo_cargo_id').innerHTML = '<option value="">Seleccione un grupo</option>';
         document.getElementById('salario').value = '';
-    }
-    if (tipo === 'obreros') {
-        document.getElementById('salario').value = '';
-    }
-    if (tipo === 'obreros') {
+    } else if (esObrero) {
         document.getElementById('salario').value = '';
     }
 }
+
+// Mostrar/ocultar la prima de profesionalización según el tipo de personal
+function actualizarVisibilidadPrimaProfesionalizacion() {
+    const tipoPersonal = document.getElementById('tipo_personal').value;
+    const primaProfesionalizacionDiv = document.getElementById('prima_profesionalizacion_div');
+    
+    if (tipoPersonal === 'administracion_publica') {
+        primaProfesionalizacionDiv.style.display = 'block';
+    } else {
+        primaProfesionalizacionDiv.style.display = 'none';
+    }
+}
+
+// Actualizar visibilidad al cargar la página y cuando cambie el tipo de personal
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarVisibilidadPrimaProfesionalizacion();
+    
+    document.getElementById('tipo_personal').addEventListener('change', function() {
+        actualizarVisibilidadPrimaProfesionalizacion();
+    });
+});
 
 // Filtrar grupos de cargo según el tipo seleccionado
 function filtrarGruposPorTipo() {
